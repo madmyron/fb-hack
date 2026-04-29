@@ -1,0 +1,64 @@
+/* ── Kitchen & Bar Display ── */
+.display-screen { min-height: 100vh; background: #111827; color: white; padding: 24px; }
+.display-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #374151; }
+.display-header h1 { font-size: 28px; font-weight: 800; }
+.order-count { background: #374151; padding: 8px 16px; border-radius: 20px; font-size: 14px; }
+.order-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.empty-state { grid-column: 1 / -1; text-align: center; padding: 60px; color: #4b5563; font-size: 18px; }
+
+/* ── Order Card ── */
+.order-card { background: #1f2937; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.order-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.order-location { display: block; font-size: 20px; font-weight: 700; }
+.order-time { display: block; font-size: 12px; color: #9ca3af; margin-top: 2px; }
+.order-status { font-size: 13px; font-weight: 600; }
+.order-items { border-top: 1px solid #374151; padding-top: 12px; }
+.order-item-row { display: flex; gap: 10px; padding: 4px 0; font-size: 15px; }
+.item-qty { color: #9ca3af; }
+.status-btn { width: 100%; padding: 10px; border-radius: 8px; color: white; font-size: 14px; font-weight: 600; cursor: pointer; border: none; }
+
+/* ── Manager Dashboard ── */
+.dashboard { min-height: 100vh; background: var(--bg, #f9fafb); }
+.dashboard-header { background: white; padding: 20px 32px; border-bottom: 1px solid var(--border, #e5e7eb); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+.dashboard-header h1 { font-size: 20px; font-weight: 700; }
+.dashboard-tabs { display: flex; gap: 4px; }
+.dashboard-tabs button { padding: 8px 20px; border-radius: 8px; background: none; color: var(--text-light, #6b7280); font-size: 14px; border: none; cursor: pointer; }
+.dashboard-tabs button.active { background: var(--amber, #d97706); color: white; font-weight: 600; }
+
+/* ── Sales Stats ── */
+.sales-stats { padding: 32px; }
+.sales-stats h2 { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px; }
+.stat-card { background: white; border-radius: 12px; padding: 20px 24px; border: 1px solid var(--border, #e5e7eb); }
+.stat-label { display: block; font-size: 13px; color: var(--text-light, #6b7280); margin-bottom: 8px; }
+.stat-value { display: block; font-size: 28px; font-weight: 800; color: var(--text, #1f2937); margin-bottom: 4px; }
+.stat-sub { display: block; font-size: 13px; color: var(--text-light, #6b7280); }
+
+/* ── Server Table ── */
+.server-table { padding: 32px; }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.section-header h2 { font-size: 22px; font-weight: 700; }
+.section-header .btn-primary { width: auto; padding: 10px 20px; }
+.add-server-form { display: flex; gap: 12px; margin-bottom: 20px; padding: 16px; background: white; border-radius: 12px; border: 1px solid var(--border, #e5e7eb); }
+.add-server-form input { flex: 1; padding: 10px 14px; border: 1px solid var(--border, #e5e7eb); border-radius: 8px; outline: none; }
+.add-server-form input:focus { border-color: var(--amber, #d97706); }
+.add-server-form .btn-primary { width: auto; padding: 10px 20px; }
+table { width: 100%; background: white; border-radius: 12px; border-collapse: collapse; border: 1px solid var(--border, #e5e7eb); overflow: hidden; }
+th { text-align: left; padding: 14px 20px; font-size: 13px; color: var(--text-light, #6b7280); border-bottom: 1px solid var(--border, #e5e7eb); font-weight: 600; }
+td { padding: 16px 20px; font-size: 15px; border-bottom: 1px solid var(--border, #e5e7eb); }
+tr:last-child td { border-bottom: none; }
+.remove-btn { background: none; color: var(--red, #ef4444); font-size: 13px; padding: 4px 8px; border-radius: 4px; }
+.remove-btn:hover { background: #fee2e2; }
+
+/* ── Venue Stats ── */
+.venue-stats-page { padding: 32px; }
+.venue-stats-page h2 { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
+.venue-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+.venue-card { background: white; border-radius: 12px; padding: 24px; border: 1px solid var(--border, #e5e7eb); }
+.venue-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+.venue-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.venue-stat span { display: block; font-size: 12px; color: var(--text-light, #6b7280); margin-bottom: 4px; }
+.venue-stat strong { font-size: 20px; font-weight: 700; }
+.top-items h4 { font-size: 14px; font-weight: 600; color: var(--text-light, #6b7280); margin-bottom: 8px; }
+.top-items ol { padding-left: 20px; }
+.top-items li { font-size: 15px; padding: 4px 0; }
