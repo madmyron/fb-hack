@@ -268,6 +268,7 @@ input { font-family: inherit; font-size: inherit; }
 
 /* ── Item Count Badge (menu, for customizable items) ── */
 .item-count-badge { font-size: 12px; background: rgba(249,115,22,0.15); color: var(--primary); padding: 3px 10px; border-radius: 10px; font-weight: 700; }
+.menu-item-soldout { opacity: 0.45; }
 
 /* ── Cart Item Customizations ── */
 .cart-item-customizations { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; }

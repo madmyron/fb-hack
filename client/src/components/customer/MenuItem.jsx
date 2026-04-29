@@ -5,6 +5,22 @@ export default function MenuItem({ item, qty, onAdd, onRemove }) {
   const [showModal, setShowModal] = useState(false);
   const hasOptions = item.options?.length > 0;
 
+  if (item.soldOut) {
+    return (
+      <div className="menu-item menu-item-soldout">
+        <div className="menu-item-info">
+          <div className="menu-item-name-row">
+            <h3>{item.name}</h3>
+            <span className="item-badge" style={{ background: 'rgba(107,114,128,0.15)', color: '#6b7280' }}>Sold Out</span>
+          </div>
+          <p>{item.description}</p>
+          <span className="price" style={{ color: 'var(--text-muted)', textDecoration: 'line-through' }}>${item.price.toFixed(2)}</span>
+        </div>
+        <span style={{ fontSize: 22, opacity: 0.3 }}>✕</span>
+      </div>
+    );
+  }
+
   const handleAdd = () => {
     if (hasOptions) setShowModal(true);
     else onAdd(item, {});
