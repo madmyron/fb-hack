@@ -1,5 +1,30 @@
 const menu = [
   {
+    id: 'happyhour',
+    category: 'Happy Hour',
+    banner: { text: 'Happy Hour Menu', hours: '3:00 PM – 7:00 PM', note: 'Discounted drinks & bites every day!' },
+    items: [
+      { id: 'hh1', name: 'Draft Beer', description: 'Any draft on tap — 16oz', price: 5.00, tag: 'drink', badge: 'reg $7–8' },
+      { id: 'hh2', name: 'House Wine', description: 'Red, white, or rosé — 6oz', price: 8.00, tag: 'drink', badge: 'reg $11–12' },
+      { id: 'hh3', name: 'Well Cocktails', description: 'Margarita, Mojito, Vodka Soda, Gin & Tonic', price: 8.00, tag: 'drink', badge: 'reg $13' },
+      { id: 'hh4', name: 'Half-Price Nachos', description: 'Tortilla chips, cheese, jalapeños, salsa, sour cream', price: 7.00, tag: 'food', badge: 'reg $14' },
+      { id: 'hh5', name: 'Half-Price Wings', description: '10 wings, choice of sauce', price: 8.00, tag: 'food', badge: 'reg $16' },
+      { id: 'hh6', name: 'Half-Price Truffle Fries', description: 'Hand-cut fries, truffle oil, parmesan', price: 5.00, tag: 'food', badge: 'reg $10' },
+    ],
+  },
+  {
+    id: 'specials',
+    category: 'Specials',
+    banner: { text: "Today's Specials", hours: 'Limited availability', note: 'Fresh picks from the kitchen.' },
+    items: [
+      { id: 's1', name: "Chef's Burger", description: 'Wagyu patty, truffle aioli, brie, caramelized onion, brioche bun', price: 22.00, tag: 'food', badge: "Chef's Pick" },
+      { id: 's2', name: 'Catch of the Day', description: 'Pan-seared fish, seasonal vegetables, lemon butter sauce — ask your server for today\'s fish', price: 26.00, tag: 'food', badge: 'Daily Special' },
+      { id: 's3', name: 'Espresso Martini', description: 'Vodka, espresso, coffee liqueur, vanilla — shaken hard', price: 14.00, tag: 'drink', badge: 'Featured' },
+      { id: 's4', name: 'Seasonal Sangria', description: 'House red, fresh fruit, brandy, citrus juice — pitcher or glass', price: 13.00, tag: 'drink', badge: 'Featured' },
+      { id: 's5', name: 'Loaded Quesadilla', description: 'Pulled pork, cheddar, jalapeños, chipotle crema', price: 15.00, tag: 'food', badge: 'New' },
+    ],
+  },
+  {
     id: 'food',
     category: 'Food',
     items: [
@@ -32,6 +57,20 @@ const menu = [
       { id: 'c3', name: 'Mojito', description: 'Rum, mint, lime, soda', price: 13.00, tag: 'drink' },
       { id: 'c4', name: 'Aperol Spritz', description: 'Aperol, prosecco, soda, orange', price: 13.00, tag: 'drink' },
       { id: 'c5', name: 'Cosmopolitan', description: 'Vodka, cranberry, lime, triple sec', price: 14.00, tag: 'drink' },
+    ],
+  },
+  {
+    id: 'winelist',
+    category: 'Wine List',
+    items: [
+      { id: 'wl1', name: 'Caymus Cabernet Sauvignon', description: 'Napa Valley — bold, dark fruit, full body — bottle', price: 95.00, tag: 'drink' },
+      { id: 'wl2', name: 'Kim Crawford Sauvignon Blanc', description: 'New Zealand — crisp, citrus, refreshing — bottle', price: 45.00, tag: 'drink' },
+      { id: 'wl3', name: 'La Marca Prosecco', description: 'Italy — light bubbles, honeydew, cream — bottle', price: 38.00, tag: 'drink' },
+      { id: 'wl4', name: 'Malbec', description: 'Argentina — plum, dark cherry, smooth tannins — 6oz', price: 13.00, tag: 'drink' },
+      { id: 'wl5', name: 'Chardonnay', description: 'California — buttery, oak, green apple — 6oz', price: 12.00, tag: 'drink' },
+      { id: 'wl6', name: 'Sauvignon Blanc', description: 'New Zealand — bright, crisp, tropical — 6oz', price: 12.00, tag: 'drink' },
+      { id: 'wl7', name: 'Pinot Noir', description: 'Oregon — earthy, cherry, silky finish — 6oz', price: 14.00, tag: 'drink' },
+      { id: 'wl8', name: 'Prosecco by the Glass', description: 'La Marca — bubbles, light, festive — 6oz', price: 12.00, tag: 'drink' },
     ],
   },
   {

@@ -2,7 +2,21 @@ import { useState, useEffect } from 'react';
 import MenuSection from './MenuSection';
 import { API_URL } from '../../config';
 
-const EMOJI = { food: '🍔', beer: '🍺', cocktails: '🍹', wine: '🍷', na: '🥤' };
+const EMOJI = {
+  happyhour: '🎉', specials: '⭐', food: '🍔', beer: '🍺',
+  cocktails: '🍹', winelist: '🍾', wine: '🍷', na: '🥤',
+};
+
+const TAB_COLORS = {
+  happyhour: 'linear-gradient(135deg, #f59e0b, #f97316)',
+  specials: 'linear-gradient(135deg, #22c55e, #06b6d4)',
+  food: 'linear-gradient(135deg, #f97316, #ef4444)',
+  beer: 'linear-gradient(135deg, #f59e0b, #d97706)',
+  cocktails: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+  winelist: 'linear-gradient(135deg, #7c3aed, #dc2626)',
+  wine: 'linear-gradient(135deg, #dc2626, #9f1239)',
+  na: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+};
 
 export default function MenuBrowser({ cart, cartCount, onAdd, onRemove, onViewCart }) {
   const [menu, setMenu] = useState([]);
@@ -32,10 +46,12 @@ export default function MenuBrowser({ cart, cartCount, onAdd, onRemove, onViewCa
           {menu.map(cat => (
             <button
               key={cat.id}
-              className={activeCategory === cat.id ? 'active' : ''}
+              className={`cat-tab ${activeCategory === cat.id ? 'active' : ''}`}
+              style={activeCategory === cat.id ? { background: TAB_COLORS[cat.id] || 'var(--grad)' } : {}}
               onClick={() => setActiveCategory(cat.id)}
             >
-              {EMOJI[cat.id]} {cat.category}
+              <span className="cat-emoji">{EMOJI[cat.id]}</span>
+              <span>{cat.category}</span>
             </button>
           ))}
         </div>

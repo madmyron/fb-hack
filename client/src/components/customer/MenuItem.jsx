@@ -2,7 +2,10 @@ export default function MenuItem({ item, qty, onAdd, onRemove }) {
   return (
     <div className="menu-item">
       <div className="menu-item-info">
-        <h3>{item.name}</h3>
+        <div className="menu-item-name-row">
+          <h3>{item.name}</h3>
+          {item.badge && <span className="item-badge">{item.badge}</span>}
+        </div>
         <p>{item.description}</p>
         <span className="price">${item.price.toFixed(2)}</span>
       </div>

@@ -8,6 +8,15 @@ export default function MenuSection({ category, cart, onAdd, onRemove }) {
 
   return (
     <div className="menu-section">
+      {category.banner && (
+        <div className="menu-banner">
+          <div className="menu-banner-top">
+            <span className="menu-banner-title">{category.banner.text}</span>
+            <span className="menu-banner-hours">{category.banner.hours}</span>
+          </div>
+          <p className="menu-banner-note">{category.banner.note}</p>
+        </div>
+      )}
       {category.items.map(item => (
         <MenuItem
           key={item.id}
