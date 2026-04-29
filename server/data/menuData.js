@@ -8,7 +8,12 @@ const menu = [
       { id: 'hh2', name: 'House Wine', description: 'Red, white, or rosé — 6oz', price: 8.00, tag: 'drink', badge: 'reg $11–12' },
       { id: 'hh3', name: 'Well Cocktails', description: 'Margarita, Mojito, Vodka Soda, Gin & Tonic', price: 8.00, tag: 'drink', badge: 'reg $13' },
       { id: 'hh4', name: 'Half-Price Nachos', description: 'Tortilla chips, cheese, jalapeños, salsa, sour cream', price: 7.00, tag: 'food', badge: 'reg $14' },
-      { id: 'hh5', name: 'Half-Price Wings', description: '10 wings, choice of sauce', price: 8.00, tag: 'food', badge: 'reg $16' },
+      { id: 'hh5', name: 'Half-Price Wings', description: '10 wings, choice of sauce', price: 8.00, tag: 'food', badge: 'reg $16', options: [
+        { id: 'sauce', label: 'Sauce', type: 'select', required: true, choices: ['Buffalo', 'BBQ', 'Honey Garlic', 'Ranch', 'Dry Rub'] },
+        { id: 'heat', label: 'Heat Level', type: 'select', required: false, choices: ['Mild', 'Medium', 'Hot', 'Extra Hot'] },
+        { id: 'sos', label: 'Sauce on Side', type: 'toggle', required: false },
+        { id: 'notes', label: 'Special Instructions', type: 'text', required: false },
+      ] },
       { id: 'hh6', name: 'Half-Price Truffle Fries', description: 'Hand-cut fries, truffle oil, parmesan', price: 5.00, tag: 'food', badge: 'reg $10' },
     ],
   },
@@ -29,12 +34,26 @@ const menu = [
     category: 'Food',
     items: [
       { id: 'f1', name: 'Loaded Nachos', description: 'Tortilla chips, cheese, jalapeños, salsa, sour cream', price: 14.00, tag: 'food' },
-      { id: 'f2', name: 'Buffalo Wings', description: '10 wings, choice of sauce, ranch or blue cheese', price: 16.00, tag: 'food' },
-      { id: 'f3', name: 'Smash Burger', description: 'Double smash patty, american cheese, pickles, special sauce', price: 18.00, tag: 'food' },
+      { id: 'f2', name: 'Buffalo Wings', description: '10 wings, choice of sauce, ranch or blue cheese', price: 16.00, tag: 'food', options: [
+        { id: 'sauce', label: 'Sauce', type: 'select', required: true, choices: ['Buffalo', 'BBQ', 'Honey Garlic', 'Ranch', 'Dry Rub'] },
+        { id: 'heat', label: 'Heat Level', type: 'select', required: false, choices: ['Mild', 'Medium', 'Hot', 'Extra Hot'] },
+        { id: 'sos', label: 'Sauce on Side', type: 'toggle', required: false },
+        { id: 'notes', label: 'Special Instructions', type: 'text', required: false },
+      ] },
+      { id: 'f3', name: 'Smash Burger', description: 'Double smash patty, american cheese, pickles, special sauce', price: 18.00, tag: 'food', options: [
+        { id: 'doneness', label: 'Doneness', type: 'select', required: true, choices: ['Medium Rare', 'Medium', 'Medium Well', 'Well Done'] },
+        { id: 'notes', label: 'Special Instructions', type: 'text', required: false },
+      ] },
       { id: 'f4', name: 'BBQ Pulled Pork Sandwich', description: 'Slow-cooked pork, coleslaw, brioche bun', price: 15.00, tag: 'food' },
-      { id: 'f5', name: 'Caesar Salad', description: 'Romaine, parmesan, croutons, caesar dressing', price: 12.00, tag: 'food' },
+      { id: 'f5', name: 'Caesar Salad', description: 'Romaine, parmesan, croutons, caesar dressing', price: 12.00, tag: 'food', options: [
+        { id: 'protein', label: 'Add Protein', type: 'select', required: false, choices: ['No Add-On', 'Grilled Chicken +$4', 'Shrimp +$5'] },
+        { id: 'notes', label: 'Special Instructions', type: 'text', required: false },
+      ] },
       { id: 'f6', name: 'Truffle Fries', description: 'Hand-cut fries, truffle oil, parmesan, herbs', price: 10.00, tag: 'food' },
-      { id: 'f7', name: 'Margherita Pizza', description: '12" pizza, tomato, fresh mozzarella, basil', price: 17.00, tag: 'food' },
+      { id: 'f7', name: 'Margherita Pizza', description: '12" pizza, tomato, fresh mozzarella, basil', price: 17.00, tag: 'food', options: [
+        { id: 'crust', label: 'Crust', type: 'select', required: false, choices: ['Thin', 'Regular', 'Thick'] },
+        { id: 'notes', label: 'Extra Toppings / Notes', type: 'text', required: false },
+      ] },
       { id: 'f8', name: 'Chocolate Brownie', description: 'Warm brownie, vanilla ice cream, chocolate sauce', price: 9.00, tag: 'food' },
     ],
   },
@@ -52,9 +71,16 @@ const menu = [
     id: 'cocktails',
     category: 'Cocktails',
     items: [
-      { id: 'c1', name: 'Classic Margarita', description: 'Tequila, lime, triple sec, salt rim', price: 13.00, tag: 'drink' },
-      { id: 'c2', name: 'Old Fashioned', description: 'Bourbon, bitters, sugar, orange peel', price: 14.00, tag: 'drink' },
-      { id: 'c3', name: 'Mojito', description: 'Rum, mint, lime, soda', price: 13.00, tag: 'drink' },
+      { id: 'c1', name: 'Classic Margarita', description: 'Tequila, lime, triple sec, salt rim', price: 13.00, tag: 'drink', options: [
+        { id: 'style', label: 'Style', type: 'select', required: false, choices: ['On the Rocks', 'Frozen'] },
+        { id: 'rim', label: 'Rim', type: 'select', required: false, choices: ['Salt', 'No Salt', 'Sugar'] },
+      ] },
+      { id: 'c2', name: 'Old Fashioned', description: 'Bourbon, bitters, sugar, orange peel', price: 14.00, tag: 'drink', options: [
+        { id: 'bourbon', label: 'Bourbon', type: 'select', required: false, choices: ["Maker's Mark", 'Bulleit', 'Woodford Reserve', 'Jim Beam'] },
+      ] },
+      { id: 'c3', name: 'Mojito', description: 'Rum, mint, lime, soda', price: 13.00, tag: 'drink', options: [
+        { id: 'extras', label: 'Extras', type: 'select', required: false, choices: ['None', 'Extra Mint', 'Extra Lime', 'Extra Mint & Lime'] },
+      ] },
       { id: 'c4', name: 'Aperol Spritz', description: 'Aperol, prosecco, soda, orange', price: 13.00, tag: 'drink' },
       { id: 'c5', name: 'Cosmopolitan', description: 'Vodka, cranberry, lime, triple sec', price: 14.00, tag: 'drink' },
     ],

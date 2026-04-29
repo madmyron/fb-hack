@@ -97,6 +97,49 @@ tr:last-child td { border-bottom: none; }
 .history-total { font-size: 17px; font-weight: 800; color: #1e293b; }
 .history-method { font-size: 12px; color: #94a3b8; margin-top: 2px; }
 
+/* ── PIN Login ── */
+.pin-gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f8fafc; }
+.pin-card { background: white; border-radius: 24px; padding: 40px; max-width: 340px; width: calc(100% - 48px); border: 1px solid #e2e8f0; box-shadow: 0 8px 40px rgba(0,0,0,0.08); text-align: center; }
+.pin-title { font-size: 24px; font-weight: 900; color: #1e293b; margin-bottom: 6px; }
+.pin-subtitle { font-size: 14px; color: #94a3b8; margin-bottom: 32px; }
+.pin-dots { display: flex; justify-content: center; gap: 14px; margin-bottom: 8px; }
+.pin-dot { width: 14px; height: 14px; border-radius: 50%; background: #e2e8f0; transition: all 0.2s; }
+.pin-dot.filled { background: #f97316; transform: scale(1.1); }
+.pin-error-text { color: #ef4444; font-size: 13px; margin-bottom: 20px; height: 18px; }
+.pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.pin-key { padding: 18px 12px; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0; font-size: 22px; font-weight: 700; color: #1e293b; cursor: pointer; transition: all 0.15s; }
+.pin-key:hover { background: #f1f5f9; }
+.pin-key:active { transform: scale(0.93); }
+.pin-zero { grid-column: 2; }
+.pin-del { font-size: 16px; color: #94a3b8; background: none; border-color: transparent; }
+
+/* ── Manager Header ── */
+.manager-header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.manager-badge { background: #f1f5f9; padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #1e293b; }
+.lock-btn { background: none; color: #94a3b8; font-size: 13px; padding: 6px 10px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+.lock-btn:hover { background: #fee2e2; color: #ef4444; }
+
+/* ── Customize Modal Options ── */
+.customize-option { padding: 14px 0; border-bottom: 1px solid #f1f5f9; }
+.customize-option:last-child { border-bottom: none; }
+.customize-label { display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+.required-star { color: #f97316; }
+.choice-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.choice-btn { padding: 8px 16px; border-radius: 20px; background: #f1f5f9; border: 1.5px solid #e2e8f0; font-size: 14px; font-weight: 600; color: #475569; cursor: pointer; transition: all 0.2s; }
+.choice-btn.active { background: #fff7ed; border-color: #f97316; color: #f97316; }
+.choice-btn.toggle-active { background: #f0fdf4; border-color: #22c55e; color: #22c55e; }
+
+/* ── Table Action Buttons ── */
+.table-actions { display: flex; gap: 8px; margin-top: 12px; }
+.discount-btn { flex: 1; padding: 10px; border-radius: 10px; background: #fff7ed; color: #f97316; font-size: 13px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; }
+.discount-btn:hover { background: #ffedd5; }
+.close-table-btn { flex: 1; padding: 10px; border-radius: 10px; background: #f0fdf4; color: #16a34a; font-size: 13px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; }
+.close-table-btn:hover { background: #dcfce7; }
+
+/* ── Order Item Customizations (kitchen/bar) ── */
+.order-item-customs { font-size: 11px; color: rgba(255,255,255,0.35); display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.order-item-customs span { background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 6px; }
+
 /* ── Move Items Button ── */
 .move-btn { width: 100%; margin-top: 12px; padding: 10px; border-radius: 10px; background: #f1f5f9; color: #475569; font-size: 13px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; }
 .move-btn:hover { background: #fee2e2; color: #ef4444; }

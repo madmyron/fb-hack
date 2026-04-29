@@ -17,7 +17,7 @@ module.exports = (io) => {
   });
 
   router.post('/', (req, res) => {
-    const { location, items, total, paymentMethod } = req.body;
+    const { location, items, total, paymentMethod, promoCode, promoDiscount } = req.body;
     const order = {
       id: uuidv4(),
       location,
@@ -26,6 +26,7 @@ module.exports = (io) => {
       paymentMethod: paymentMethod || 'pending',
       status: 'received',
       createdAt: new Date().toISOString(),
+      ...(promoCode && { promoCode, promoDiscount }),
     };
     orders.push(order);
     io.emit('new_order', order);
@@ -38,6 +39,37 @@ module.exports = (io) => {
     order.status = req.body.status;
     io.emit('order_updated', order);
     res.json(order);
+  });
+
+  router.post('/close-table', (req, res) => {
+    const { location } = req.body;
+    const tableOrders = orders.filter(o =>
+      o.location.type === location.type &&
+      o.location.number === location.number &&
+      o.status !== 'delivered'
+    );
+    tableOrders.forEach(o => {
+      o.status = 'delivered';
+      o.closedAt = new Date().toISOString();
+      io.emit('order_updated', o);
+    });
+    res.json({ success: true, closed: tableOrders.length });
+  });
+
+  router.post('/discount', (req, res) => {
+    const { location, pct, managerName } = req.body;
+    const tableOrders = orders.filter(o =>
+      o.location.type === location.type &&
+      o.location.number === location.number &&
+      o.status !== 'delivered'
+    );
+    tableOrders.forEach(o => {
+      if (!o.originalTotal) o.originalTotal = o.total;
+      o.discount = { pct, managerName, appliedAt: new Date().toISOString() };
+      o.total = Math.max(0, o.originalTotal * (1 - pct));
+      io.emit('order_updated', o);
+    });
+    res.json({ success: true });
   });
 
   router.post('/transfer', (req, res) => {

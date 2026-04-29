@@ -35,7 +35,16 @@ export default function OrderCard({ order, filter }) {
         {items.map((item, i) => (
           <div key={i} className="order-item-row">
             <span className="item-qty">{item.qty}×</span>
-            <span>{item.name}</span>
+            <div>
+              <span>{item.name}</span>
+              {item.customizations && Object.keys(item.customizations).length > 0 && (
+                <div className="order-item-customs">
+                  {Object.entries(item.customizations).map(([k, v]) => (
+                    <span key={k}>{typeof v === 'boolean' ? k.replace(/_/g, ' ') : String(v)}</span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>

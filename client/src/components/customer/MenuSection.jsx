@@ -1,10 +1,10 @@
 import MenuItem from './MenuItem';
 
 export default function MenuSection({ category, cart, onAdd, onRemove }) {
-  const getQty = (itemId) => {
-    const found = cart.find(c => c.item.id === itemId);
-    return found ? found.qty : 0;
-  };
+  const getQty = (itemId) =>
+    cart.filter(c => c.item.id === itemId).reduce((s, c) => s + c.qty, 0);
+
+  const simpleKey = (itemId) => `${itemId}__${JSON.stringify([])}`;
 
   return (
     <div className="menu-section">
@@ -22,8 +22,8 @@ export default function MenuSection({ category, cart, onAdd, onRemove }) {
           key={item.id}
           item={item}
           qty={getQty(item.id)}
-          onAdd={() => onAdd(item)}
-          onRemove={() => onRemove(item.id)}
+          onAdd={(itm, customizations) => onAdd(itm, customizations)}
+          onRemove={() => onRemove(simpleKey(item.id))}
         />
       ))}
     </div>

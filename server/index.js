@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const menuRoutes = require('./routes/menu');
 const orderRoutes = require('./routes/orders');
+const promoRoutes = require('./routes/promos');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,6 +16,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orderRoutes(io));
+app.use('/api/promos', promoRoutes);
 
 io.on('connection', () => {});
 

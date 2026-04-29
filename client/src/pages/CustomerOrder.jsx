@@ -11,19 +11,21 @@ export default function CustomerOrder() {
   const [cart, setCart] = useState([]);
   const [orderId, setOrderId] = useState(null);
 
-  const addToCart = (item) => {
+  const addToCart = (item, customizations = {}) => {
+    const cartKey = `${item.id}__${JSON.stringify(Object.entries(customizations).sort())}`;
     setCart(prev => {
-      const existing = prev.find(c => c.item.id === item.id);
-      if (existing) return prev.map(c => c.item.id === item.id ? { ...c, qty: c.qty + 1 } : c);
-      return [...prev, { item, qty: 1 }];
+      const existing = prev.find(c => c.cartKey === cartKey);
+      if (existing) return prev.map(c => c.cartKey === cartKey ? { ...c, qty: c.qty + 1 } : c);
+      return [...prev, { item, qty: 1, customizations, cartKey }];
     });
   };
 
-  const removeFromCart = (itemId) => {
+  const removeFromCart = (cartKey) => {
     setCart(prev => {
-      const existing = prev.find(c => c.item.id === itemId);
-      if (existing.qty === 1) return prev.filter(c => c.item.id !== itemId);
-      return prev.map(c => c.item.id === itemId ? { ...c, qty: c.qty - 1 } : c);
+      const existing = prev.find(c => c.cartKey === cartKey);
+      if (!existing) return prev;
+      if (existing.qty === 1) return prev.filter(c => c.cartKey !== cartKey);
+      return prev.map(c => c.cartKey === cartKey ? { ...c, qty: c.qty - 1 } : c);
     });
   };
 

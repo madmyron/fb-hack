@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { API_URL } from '../../config';
 import MoveItemsModal from './MoveItemsModal';
+import DiscountModal from './DiscountModal';
 
 const DUMMY_HISTORY = [
   { id: 'h1', location: { type: 'table', number: '3' }, items: [{ name: 'Smash Burger', qty: 2, tag: 'food' }, { name: 'Draft Lager', qty: 2, tag: 'drink' }], total: 50.00, paymentMethod: 'Credit/Debit Card', createdAt: '2026-04-29T18:30:00Z' },
@@ -22,13 +23,13 @@ function getTableStatus(orders) {
 }
 
 const elapsed = (ts) => Math.floor((Date.now() - new Date(ts)) / 60000);
-
 const btnStyle = { width: 'auto', padding: '10px 20px', borderRadius: '10px', fontSize: '14px' };
 
-export default function ActiveTables() {
+export default function ActiveTables({ managerName }) {
   const [orders, setOrders] = useState([]);
   const [view, setView] = useState('active');
   const [moveTable, setMoveTable] = useState(null);
+  const [discountTable, setDiscountTable] = useState(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/orders`).then(r => r.json()).then(setOrders);
@@ -37,6 +38,15 @@ export default function ActiveTables() {
     socket.on('order_updated', updated => setOrders(prev => prev.map(o => o.id === updated.id ? updated : o)));
     return () => socket.disconnect();
   }, []);
+
+  const closeTable = async (table) => {
+    if (!window.confirm(`Close ${table.location.type === 'table' ? 'Table' : 'Bar'} ${table.location.number}? This marks all items as delivered.`)) return;
+    await fetch(`${API_URL}/api/orders/close-table`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ location: table.location }),
+    });
+  };
 
   const tableMap = {};
   orders.forEach(order => {
@@ -95,6 +105,7 @@ export default function ActiveTables() {
             const status = getTableStatus(table.orders);
             const items = table.orders.flatMap(o => o.items);
             const key = `${table.location.type}-${table.location.number}`;
+            const hasDiscount = table.orders.some(o => o.discount);
             return (
               <div key={key} className="table-card" style={{ borderTopColor: STATUS_COLORS[status] }}>
                 <div className="table-card-header">
@@ -116,21 +127,30 @@ export default function ActiveTables() {
                 </div>
                 <div className="table-total">
                   <span>Tab Total</span>
-                  <span>${table.total.toFixed(2)}</span>
+                  <span>
+                    ${table.total.toFixed(2)}
+                    {hasDiscount && <span style={{ fontSize: 11, color: '#f97316', marginLeft: 6 }}>discounted</span>}
+                  </span>
                 </div>
-                <button className="move-btn" onClick={() => setMoveTable(table)}>
-                  Move Items
-                </button>
+                <div className="table-actions">
+                  <button className="discount-btn" onClick={() => setDiscountTable(table)}>Discount</button>
+                  <button className="move-btn" style={{ margin: 0, flex: 1 }} onClick={() => setMoveTable(table)}>Move Items</button>
+                  <button className="close-table-btn" onClick={() => closeTable(table)}>Close</button>
+                </div>
               </div>
             );
           })}
         </div>
       )}
       {moveTable && (
-        <MoveItemsModal
-          table={moveTable}
-          onClose={() => setMoveTable(null)}
-          onMoved={() => setMoveTable(null)}
+        <MoveItemsModal table={moveTable} onClose={() => setMoveTable(null)} onMoved={() => setMoveTable(null)} />
+      )}
+      {discountTable && (
+        <DiscountModal
+          table={discountTable}
+          managerName={managerName}
+          onClose={() => setDiscountTable(null)}
+          onApplied={() => setDiscountTable(null)}
         />
       )}
     </div>

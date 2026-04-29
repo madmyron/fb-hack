@@ -34,18 +34,108 @@ input { font-family: inherit; font-size: inherit; }
 /* ── Customer App Shell ── */
 .customer-app { min-height: 100vh; max-width: 480px; margin: 0 auto; background: var(--bg); color: var(--text); }
 
+/* ── Welcome Screen ── */
+.welcome-screen {
+  min-height: 100vh; background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  padding: 0 24px 52px;
+  position: relative; overflow: hidden;
+}
+
+.orb {
+  position: absolute; border-radius: 50%; filter: blur(90px);
+  pointer-events: none; animation: pulse-orb 5s ease-in-out infinite;
+}
+.orb-a {
+  width: 320px; height: 320px;
+  background: radial-gradient(circle, rgba(249,115,22,0.45) 0%, transparent 70%);
+  top: -100px; left: -80px; animation-delay: 0s;
+}
+.orb-b {
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(139,92,246,0.4) 0%, transparent 70%);
+  top: 40px; right: -70px; animation-delay: 2s;
+}
+.orb-c {
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(6,182,212,0.25) 0%, transparent 70%);
+  top: 200px; left: 30%; animation-delay: 3.5s;
+}
+@keyframes pulse-orb {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+.icon-grid {
+  position: absolute; top: 0; left: 0; right: 0; height: 56%;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  align-content: center; justify-items: center;
+  padding: 32px 16px; gap: 8px;
+}
+.float-icon {
+  font-size: 42px; display: inline-block;
+  animation: float-up 3.2s ease-in-out infinite;
+  filter: drop-shadow(0 6px 16px rgba(249,115,22,0.35));
+}
+@keyframes float-up {
+  0%, 100% { transform: translateY(0px) rotate(-3deg); }
+  50% { transform: translateY(-14px) rotate(3deg); }
+}
+
+.welcome-panel {
+  width: 100%; max-width: 420px;
+  text-align: center; position: relative; z-index: 2;
+  background: linear-gradient(to top, var(--bg) 80%, transparent);
+  padding-top: 40px;
+}
+.venue-badge {
+  display: inline-block; font-size: 11px; font-weight: 700;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--primary); background: rgba(249,115,22,0.1);
+  border: 1px solid rgba(249,115,22,0.25);
+  padding: 5px 16px; border-radius: 20px; margin-bottom: 14px;
+}
+.venue-title {
+  font-size: 54px; font-weight: 900; line-height: 1; margin-bottom: 14px;
+  background: var(--grad); -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; background-clip: text;
+}
+.venue-sub { font-size: 16px; color: var(--text-muted); line-height: 1.6; margin-bottom: 32px; }
+
+.quick-btn {
+  display: block; width: 100%; padding: 17px;
+  background: rgba(249,115,22,0.12); border: 1.5px solid rgba(249,115,22,0.35);
+  border-radius: 14px; color: var(--primary); font-size: 16px; font-weight: 700;
+  margin-bottom: 12px; cursor: pointer; transition: all 0.2s; letter-spacing: 0.2px;
+}
+.quick-btn:hover { background: rgba(249,115,22,0.2); }
+
+.welcome-main-btn { margin-bottom: 16px; }
+
+.skip-link {
+  background: none; border: none; color: var(--text-muted);
+  font-size: 14px; padding: 8px; cursor: pointer;
+  width: 100%; transition: color 0.2s;
+}
+.skip-link:hover { color: var(--text); }
+
 /* ── Location Entry ── */
 .location-entry {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   min-height: 100vh; padding: 32px 24px; text-align: center;
   background: radial-gradient(ellipse at top, #1e1b4b 0%, #0f0e17 65%);
 }
-.location-header { margin-bottom: 48px; }
+.location-header { margin-bottom: 48px; width: 100%; }
+.step-tag {
+  font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--primary); margin-bottom: 12px;
+}
 .location-header h1 {
-  font-size: 48px; font-weight: 900; margin-bottom: 12px;
+  font-size: 40px; font-weight: 900; margin-bottom: 12px;
   background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.location-header p { color: var(--text-muted); font-size: 18px; }
+.location-header p { color: var(--text-muted); font-size: 17px; }
 .location-form { width: 100%; display: flex; flex-direction: column; gap: 16px; }
 .type-toggle { display: flex; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); }
 .type-toggle button { flex: 1; padding: 14px; background: transparent; color: var(--text-muted); font-size: 15px; font-weight: 500; transition: all 0.2s; }
@@ -171,3 +261,21 @@ input { font-family: inherit; font-size: inherit; }
 .status-message h3 { font-size: 22px; font-weight: 800; margin-bottom: 8px; color: var(--text); }
 .status-message p { color: var(--text-muted); font-size: 15px; }
 .loading { padding: 40px; text-align: center; color: var(--text-muted); }
+
+/* ── Item Count Badge (menu, for customizable items) ── */
+.item-count-badge { font-size: 12px; background: rgba(249,115,22,0.15); color: var(--primary); padding: 3px 10px; border-radius: 10px; font-weight: 700; }
+
+/* ── Cart Item Customizations ── */
+.cart-item-customizations { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; }
+.cart-item-customizations span { background: var(--surface2); padding: 2px 8px; border-radius: 10px; }
+
+/* ── Promo Code ── */
+.promo-section { margin: 20px 0; padding: 16px; background: var(--surface); border-radius: 14px; border: 1px solid var(--border); }
+.promo-section h3 { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.6px; }
+.promo-row { display: flex; gap: 8px; }
+.promo-input { flex: 1; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; outline: none; background: var(--surface2); color: var(--text); text-transform: uppercase; letter-spacing: 1px; }
+.promo-input:focus { border-color: var(--primary); }
+.promo-apply-btn { padding: 12px 16px; background: var(--grad); color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.promo-feedback { font-size: 13px; margin-top: 8px; }
+.promo-feedback.success { color: var(--green); }
+.promo-feedback.error { color: var(--red); }

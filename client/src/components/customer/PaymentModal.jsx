@@ -7,8 +7,29 @@ export default function PaymentModal({ cart, total, location, onBack, onOrderPla
   const [method, setMethod] = useState('Credit/Debit Card');
   const [loading, setLoading] = useState(false);
   const [splitCount, setSplitCount] = useState(2);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoMsg, setPromoMsg] = useState({ text: '', type: '' });
 
-  const splitAmount = (total / splitCount).toFixed(2);
+  const finalTotal = total * (1 - promoDiscount);
+  const splitAmount = (finalTotal / splitCount).toFixed(2);
+
+  const applyPromo = async () => {
+    if (!promoCode.trim()) return;
+    try {
+      const res = await fetch(`${API_URL}/api/promos/${promoCode.trim().toUpperCase()}`);
+      if (!res.ok) {
+        setPromoDiscount(0);
+        setPromoMsg({ text: 'Invalid promo code.', type: 'error' });
+        return;
+      }
+      const data = await res.json();
+      setPromoDiscount(data.discount);
+      setPromoMsg({ text: `${Math.round(data.discount * 100)}% discount applied!`, type: 'success' });
+    } catch {
+      setPromoMsg({ text: 'Could not apply code. Try again.', type: 'error' });
+    }
+  };
 
   const handlePay = async () => {
     setLoading(true);
@@ -18,9 +39,16 @@ export default function PaymentModal({ cart, total, location, onBack, onOrderPla
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           location,
-          items: cart.map(c => ({ name: c.item.name, qty: c.qty, price: c.item.price, tag: c.item.tag })),
-          total,
+          items: cart.map(c => ({
+            name: c.item.name,
+            qty: c.qty,
+            price: c.item.price,
+            tag: c.item.tag,
+            customizations: c.customizations || {},
+          })),
+          total: finalTotal,
           paymentMethod: method,
+          ...(promoDiscount > 0 && { promoCode: promoCode.trim().toUpperCase(), promoDiscount }),
         }),
       });
       const order = await res.json();
@@ -38,17 +66,41 @@ export default function PaymentModal({ cart, total, location, onBack, onOrderPla
       </div>
       <div className="order-summary">
         <h3>Order Summary</h3>
-        {cart.map(({ item, qty }) => (
-          <div key={item.id} className="summary-row">
-            <span>{item.name} × {qty}</span>
-            <span>${(item.price * qty).toFixed(2)}</span>
+        {cart.map((entry) => (
+          <div key={entry.cartKey} className="summary-row">
+            <span>{entry.item.name} × {entry.qty}</span>
+            <span>${(entry.item.price * entry.qty).toFixed(2)}</span>
           </div>
         ))}
+        {promoDiscount > 0 && (
+          <div className="summary-row" style={{ color: 'var(--green)' }}>
+            <span>Promo ({Math.round(promoDiscount * 100)}% off)</span>
+            <span>−${(total * promoDiscount).toFixed(2)}</span>
+          </div>
+        )}
         <div className="summary-total">
           <span>Total</span>
-          <span>${total.toFixed(2)}</span>
+          <span>${finalTotal.toFixed(2)}</span>
         </div>
       </div>
+
+      <div className="promo-section">
+        <h3>Promo Code</h3>
+        <div className="promo-row">
+          <input
+            className="promo-input"
+            type="text"
+            placeholder="Enter code"
+            value={promoCode}
+            onChange={e => { setPromoCode(e.target.value); setPromoMsg({ text: '', type: '' }); setPromoDiscount(0); }}
+          />
+          <button className="promo-apply-btn" onClick={applyPromo}>Apply</button>
+        </div>
+        {promoMsg.text && (
+          <p className={`promo-feedback ${promoMsg.type}`}>{promoMsg.text}</p>
+        )}
+      </div>
+
       <div className="payment-methods">
         <h3>How would you like to pay?</h3>
         {PAYMENT_METHODS.map(m => (
@@ -69,7 +121,7 @@ export default function PaymentModal({ cart, total, location, onBack, onOrderPla
         </div>
       )}
       <button className="btn-primary pay-btn" onClick={handlePay} disabled={loading}>
-        {loading ? 'Placing Order...' : `Pay Now — $${total.toFixed(2)}`}
+        {loading ? 'Placing Order...' : `Pay Now — $${finalTotal.toFixed(2)}`}
       </button>
       <p className="payment-note">
         {method === 'Cash' ? 'Your server will collect payment at your table.' : 'Secure payment processed on next screen.'}

@@ -6,16 +6,25 @@ export default function CartReview({ cart, total, onAdd, onRemove, onBack, onChe
         <h2>Your Order</h2>
       </div>
       <div className="cart-items">
-        {cart.map(({ item, qty }) => (
-          <div key={item.id} className="cart-item">
+        {cart.map((entry) => (
+          <div key={entry.cartKey} className="cart-item">
             <div className="cart-item-info">
-              <span className="cart-item-name">{item.name}</span>
-              <span className="cart-item-price">${(item.price * qty).toFixed(2)}</span>
+              <div>
+                <span className="cart-item-name">{entry.item.name}</span>
+                {entry.customizations && Object.keys(entry.customizations).length > 0 && (
+                  <div className="cart-item-customizations">
+                    {Object.entries(entry.customizations).map(([k, v]) => (
+                      <span key={k}>{typeof v === 'boolean' ? k.replace(/_/g, ' ') : v}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <span className="cart-item-price">${(entry.item.price * entry.qty).toFixed(2)}</span>
             </div>
             <div className="qty-control">
-              <button onClick={() => onRemove(item.id)}>−</button>
-              <span>{qty}</span>
-              <button onClick={() => onAdd(item)}>+</button>
+              <button onClick={() => onRemove(entry.cartKey)}>−</button>
+              <span>{entry.qty}</span>
+              <button onClick={() => onAdd(entry.item, entry.customizations)}>+</button>
             </div>
           </div>
         ))}
