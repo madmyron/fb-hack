@@ -27,16 +27,18 @@ export default function MenuBrowser({ cart, cartCount, onAdd, onRemove, onViewCa
           <button className="cart-btn" onClick={onViewCart}>Cart ({cartCount})</button>
         )}
       </div>
-      <div className="category-tabs">
-        {menu.map(cat => (
-          <button
-            key={cat.id}
-            className={activeCategory === cat.id ? 'active' : ''}
-            onClick={() => setActiveCategory(cat.id)}
-          >
-            {EMOJI[cat.id]} {cat.category}
-          </button>
-        ))}
+      <div className="category-tabs-wrapper">
+        <div className="category-tabs">
+          {menu.map(cat => (
+            <button
+              key={cat.id}
+              className={activeCategory === cat.id ? 'active' : ''}
+              onClick={() => setActiveCategory(cat.id)}
+            >
+              {EMOJI[cat.id]} {cat.category}
+            </button>
+          ))}
+        </div>
       </div>
       {active && <MenuSection category={active} cart={cart} onAdd={onAdd} onRemove={onRemove} />}
       {cartCount > 0 && (

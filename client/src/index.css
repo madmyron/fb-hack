@@ -66,10 +66,18 @@ input { font-family: inherit; font-size: inherit; }
 }
 .menu-header h2 { font-size: 22px; font-weight: 800; color: var(--text); }
 .cart-btn { background: var(--grad); color: white; padding: 8px 18px; border-radius: 20px; font-size: 14px; font-weight: 700; }
+.category-tabs-wrapper {
+  position: sticky; top: 65px; z-index: 9;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.category-tabs-wrapper::after {
+  content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 48px;
+  background: linear-gradient(to right, transparent, var(--surface));
+  pointer-events: none;
+}
 .category-tabs {
   display: flex; overflow-x: auto; padding: 14px 16px; gap: 10px;
-  background: var(--surface); border-bottom: 1px solid var(--border);
-  position: sticky; top: 65px; z-index: 9; scrollbar-width: none;
+  scrollbar-width: none;
 }
 .category-tabs::-webkit-scrollbar { display: none; }
 .category-tabs button {
