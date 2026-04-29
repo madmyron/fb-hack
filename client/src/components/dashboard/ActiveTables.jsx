@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { API_URL } from '../../config';
+import MoveItemsModal from './MoveItemsModal';
 
 const DUMMY_HISTORY = [
   { id: 'h1', location: { type: 'table', number: '3' }, items: [{ name: 'Smash Burger', qty: 2, tag: 'food' }, { name: 'Draft Lager', qty: 2, tag: 'drink' }], total: 50.00, paymentMethod: 'Credit/Debit Card', createdAt: '2026-04-29T18:30:00Z' },
@@ -27,6 +28,7 @@ const btnStyle = { width: 'auto', padding: '10px 20px', borderRadius: '10px', fo
 export default function ActiveTables() {
   const [orders, setOrders] = useState([]);
   const [view, setView] = useState('active');
+  const [moveTable, setMoveTable] = useState(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/orders`).then(r => r.json()).then(setOrders);
@@ -116,10 +118,20 @@ export default function ActiveTables() {
                   <span>Tab Total</span>
                   <span>${table.total.toFixed(2)}</span>
                 </div>
+                <button className="move-btn" onClick={() => setMoveTable(table)}>
+                  Move Items
+                </button>
               </div>
             );
           })}
         </div>
+      )}
+      {moveTable && (
+        <MoveItemsModal
+          table={moveTable}
+          onClose={() => setMoveTable(null)}
+          onMoved={() => setMoveTable(null)}
+        />
       )}
     </div>
   );
