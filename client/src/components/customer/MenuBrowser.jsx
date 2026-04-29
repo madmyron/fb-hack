@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import MenuSection from './MenuSection';
+import { API_URL } from '../../config';
 
 export default function MenuBrowser({ cart, cartCount, onAdd, onRemove, onViewCart }) {
   const [menu, setMenu] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
 
   useEffect(() => {
-    fetch('/api/menu')
+    fetch(`${API_URL}/api/menu`)
       .then(r => r.json())
       .then(data => {
         setMenu(data);

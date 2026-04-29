@@ -1,3 +1,5 @@
+import { API_URL } from '../../config';
+
 const STATUS_COLORS = { received: '#f59e0b', preparing: '#3b82f6', ready: '#10b981', delivered: '#6b7280' };
 const NEXT_STATUS = { received: 'preparing', preparing: 'ready', ready: 'delivered' };
 const STATUS_LABELS = { received: 'Received', preparing: 'Preparing', ready: 'Ready', delivered: 'Delivered' };
@@ -9,7 +11,7 @@ export default function OrderCard({ order, filter }) {
 
   const updateStatus = async () => {
     if (!next) return;
-    await fetch(`/api/orders/${order.id}/status`, {
+    await fetch(`${API_URL}/api/orders/${order.id}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: next }),

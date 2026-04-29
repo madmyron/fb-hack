@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
+import { API_URL } from '../../config';
 
 const STEPS = ['received', 'preparing', 'ready', 'delivered'];
 const LABELS = { received: 'Order Received', preparing: 'Being Prepared', ready: 'Ready!', delivered: 'Delivered' };
@@ -14,9 +15,9 @@ export default function OrderTracker({ orderId }) {
   const [order, setOrder] = useState(null);
 
   useEffect(() => {
-    fetch(`/api/orders/${orderId}`).then(r => r.json()).then(setOrder);
+    fetch(`${API_URL}/api/orders/${orderId}`).then(r => r.json()).then(setOrder);
 
-    const socket = io();
+    const socket = io(API_URL);
     socket.on('order_updated', (updated) => {
       if (updated.id === orderId) setOrder(updated);
     });

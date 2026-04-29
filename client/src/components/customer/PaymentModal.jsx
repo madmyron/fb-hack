@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_URL } from '../../config';
 
 const PAYMENT_METHODS = ['Credit/Debit Card', 'Cash', 'Split Bill'];
 
@@ -12,7 +13,7 @@ export default function PaymentModal({ cart, total, location, onBack, onOrderPla
   const handlePay = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/orders', {
+      const res = await fetch(`${API_URL}/api/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

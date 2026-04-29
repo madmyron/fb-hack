@@ -2,14 +2,15 @@ import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import OrderCard from '../components/display/OrderCard';
 import '../operations.css';
+import { API_URL } from '../config';
 
 export default function BarDisplay() {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    fetch('/api/orders').then(r => r.json()).then(setOrders);
+    fetch(`${API_URL}/api/orders`).then(r => r.json()).then(setOrders);
 
-    const socket = io();
+    const socket = io(API_URL);
     socket.on('new_order', (order) => setOrders(prev => [order, ...prev]));
     socket.on('order_updated', (updated) => {
       setOrders(prev => prev.map(o => o.id === updated.id ? updated : o));
