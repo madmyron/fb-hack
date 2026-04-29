@@ -3,6 +3,7 @@ import '../operations.css';
 import SalesStats from '../components/dashboard/SalesStats';
 import ServerTable from '../components/dashboard/ServerTable';
 import VenueStats from '../components/dashboard/VenueStats';
+import ActiveTables from '../components/dashboard/ActiveTables';
 
 const INITIAL_SERVERS = [
   { id: 1, name: 'Jessica Martinez', sales: 4200, tips: 850, orders: 127 },
@@ -26,7 +27,7 @@ export default function ManagerDashboard() {
 
   const removeServer = (id) => setServers(prev => prev.filter(s => s.id !== id));
 
-  const tabs = ['overview', 'servers', 'venue'];
+  const tabs = ['overview', 'tables', 'servers', 'venue'];
 
   return (
     <div className="dashboard">
@@ -56,6 +57,7 @@ export default function ManagerDashboard() {
           onToggleForm={() => setShowAddForm(f => !f)}
         />
       )}
+      {activeTab === 'tables' && <ActiveTables />}
       {activeTab === 'venue' && <VenueStats />}
     </div>
   );

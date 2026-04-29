@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import MenuSection from './MenuSection';
 import { API_URL } from '../../config';
 
+const EMOJI = { food: '🍔', beer: '🍺', cocktails: '🍹', wine: '🍷', na: '🥤' };
+
 export default function MenuBrowser({ cart, cartCount, onAdd, onRemove, onViewCart }) {
   const [menu, setMenu] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
@@ -32,7 +34,7 @@ export default function MenuBrowser({ cart, cartCount, onAdd, onRemove, onViewCa
             className={activeCategory === cat.id ? 'active' : ''}
             onClick={() => setActiveCategory(cat.id)}
           >
-            {cat.category}
+            {EMOJI[cat.id]} {cat.category}
           </button>
         ))}
       </div>
