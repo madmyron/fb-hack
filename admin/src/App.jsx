@@ -9,10 +9,10 @@ const DEFAULT_CLIENTS = [
   {
     id: 'tap-room',
     name: 'The Tap Room',
-    contact: '',
-    email: '',
-    phone: '',
-    city: '',
+    contact: 'Jenny',
+    email: 'jenny@loveme.com',
+    phone: '867-5309',
+    city: 'My Dreams',
     startDate: '2026-01-01',
     rate: 3.5,
     status: 'active',
@@ -68,7 +68,7 @@ export default function App() {
   const [authed, setAuthed] = useState(false);
   const [clients, setClients] = useState(() => {
     try {
-      const saved = localStorage.getItem('fbhack_clients');
+      const saved = localStorage.getItem('fbhack_clients_v2');
       return saved ? JSON.parse(saved) : DEFAULT_CLIENTS;
     } catch { return DEFAULT_CLIENTS; }
   });
@@ -89,7 +89,7 @@ export default function App() {
 
   const saveClients = (updated) => {
     setClients(updated);
-    localStorage.setItem('fbhack_clients', JSON.stringify(updated));
+    localStorage.setItem('fbhack_clients_v2', JSON.stringify(updated));
   };
 
   const addClient = () => {
