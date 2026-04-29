@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import MenuSection from './MenuSection';
 import { API_URL } from '../../config';
 
@@ -21,6 +21,7 @@ const TAB_COLORS = {
 export default function MenuBrowser({ cart, cartCount, onAdd, onRemove, onViewCart }) {
   const [menu, setMenu] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
+  const tabsRef = useRef(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/menu`)
@@ -30,6 +31,16 @@ export default function MenuBrowser({ cart, cartCount, onAdd, onRemove, onViewCa
         if (data.length > 0) setActiveCategory(data[0].id);
       });
   }, []);
+
+  const scrollTabs = (dir) => {
+    tabsRef.current?.scrollBy({ left: dir * 200, behavior: 'smooth' });
+  };
+
+  const selectTab = (id) => {
+    setActiveCategory(id);
+    const el = tabsRef.current?.querySelector(`[data-catid="${id}"]`);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  };
 
   const active = menu.find(c => c.id === activeCategory);
 
@@ -42,19 +53,22 @@ export default function MenuBrowser({ cart, cartCount, onAdd, onRemove, onViewCa
         )}
       </div>
       <div className="category-tabs-wrapper">
-        <div className="category-tabs">
+        <button className="tab-scroll-arrow" onClick={() => scrollTabs(-1)}>‹</button>
+        <div className="category-tabs" ref={tabsRef}>
           {menu.map(cat => (
             <button
               key={cat.id}
+              data-catid={cat.id}
               className={`cat-tab ${activeCategory === cat.id ? 'active' : ''}`}
               style={activeCategory === cat.id ? { background: TAB_COLORS[cat.id] || 'var(--grad)' } : {}}
-              onClick={() => setActiveCategory(cat.id)}
+              onClick={() => selectTab(cat.id)}
             >
               <span className="cat-emoji">{EMOJI[cat.id]}</span>
               <span>{cat.category}</span>
             </button>
           ))}
         </div>
+        <button className="tab-scroll-arrow" onClick={() => scrollTabs(1)}>›</button>
       </div>
       {active && <MenuSection category={active} cart={cart} onAdd={onAdd} onRemove={onRemove} />}
       {cartCount > 0 && (

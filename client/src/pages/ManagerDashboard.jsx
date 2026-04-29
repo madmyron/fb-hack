@@ -5,6 +5,7 @@ import ServerTable from '../components/dashboard/ServerTable';
 import VenueStats from '../components/dashboard/VenueStats';
 import ActiveTables from '../components/dashboard/ActiveTables';
 import Reports from '../components/dashboard/Reports';
+import SpecialsEditor from '../components/dashboard/SpecialsEditor';
 
 const MANAGERS = [
   { name: 'Michael', pin: '1234', role: 'Owner' },
@@ -84,7 +85,7 @@ export default function ManagerDashboard() {
 
   const removeServer = (id) => setServers(prev => prev.filter(s => s.id !== id));
 
-  const tabs = ['overview', 'tables', 'servers', 'venue', 'reports'];
+  const tabs = ['overview', 'tables', 'servers', 'venue', 'specials', 'reports'];
 
   return (
     <div className="dashboard">
@@ -120,6 +121,7 @@ export default function ManagerDashboard() {
       )}
       {activeTab === 'tables' && <ActiveTables managerName={manager.name} />}
       {activeTab === 'venue' && <VenueStats />}
+      {activeTab === 'specials' && <SpecialsEditor />}
       {activeTab === 'reports' && <Reports />}
     </div>
   );
