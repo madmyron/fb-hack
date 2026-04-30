@@ -8,7 +8,8 @@ const menu = [
       { id: 'hh2', name: 'House Wine', description: 'Red, white, or rosé — 6oz', price: 8.00, tag: 'drink', badge: 'reg $11–12' },
       { id: 'hh3', name: 'Well Cocktails', description: 'Margarita, Mojito, Vodka Soda, Gin & Tonic', price: 8.00, tag: 'drink', badge: 'reg $13' },
       { id: 'hh4', name: 'Half-Price Nachos', description: 'Tortilla chips, cheese, jalapeños, salsa, sour cream', price: 7.00, tag: 'food', badge: 'reg $14' },
-      { id: 'hh5', name: 'Half-Price Wings', description: '10 wings, choice of sauce', price: 8.00, tag: 'food', badge: 'reg $16', options: [
+      { id: 'hh5', name: 'Half-Price Wings', description: 'Choice of 6 or 12 wings, choice of sauce', price: 8.00, tag: 'food', badge: 'reg $16', options: [
+        { id: 'qty', label: 'Amount', type: 'select', required: true, choices: ['6 Wings', '12 Wings'] },
         { id: 'sauce', label: 'Sauce', type: 'select', required: true, choices: ['Buffalo', 'BBQ', 'Honey Garlic', 'Ranch', 'Dry Rub'] },
         { id: 'heat', label: 'Heat Level', type: 'select', required: false, choices: ['Mild', 'Medium', 'Hot', 'Extra Hot'] },
         { id: 'sos', label: 'Sauce on Side', type: 'toggle', required: false },
@@ -34,7 +35,8 @@ const menu = [
     category: 'Food',
     items: [
       { id: 'f1', name: 'Loaded Nachos', description: 'Tortilla chips, cheese, jalapeños, salsa, sour cream', price: 14.00, tag: 'food' },
-      { id: 'f2', name: 'Buffalo Wings', description: '10 wings, choice of sauce, ranch or blue cheese', price: 16.00, tag: 'food', options: [
+      { id: 'f2', name: 'Buffalo Wings', description: 'Choice of 6 or 12 wings, choice of sauce, ranch or blue cheese', price: 16.00, tag: 'food', options: [
+        { id: 'qty', label: 'Amount', type: 'select', required: true, choices: ['6 Wings', '12 Wings'] },
         { id: 'sauce', label: 'Sauce', type: 'select', required: true, choices: ['Buffalo', 'BBQ', 'Honey Garlic', 'Ranch', 'Dry Rub'] },
         { id: 'heat', label: 'Heat Level', type: 'select', required: false, choices: ['Mild', 'Medium', 'Hot', 'Extra Hot'] },
         { id: 'sos', label: 'Sauce on Side', type: 'toggle', required: false },
