@@ -19,6 +19,31 @@ export default function CustomerView() {
   const [submitting, setSubmitting] = useState(false);
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
 
+  // Restore saved guest info on load, and re-open photo modal if camera was in progress
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(`titi_${eventId}`) || '{}');
+      if (saved.guestName) setGuestName(saved.guestName);
+      if (saved.table && !searchParams.get('table')) setTable(saved.table);
+      if (saved.seat && !searchParams.get('seat')) setSeat(saved.seat);
+      if (saved.screen === 'menu' && saved.guestName) {
+        setScreen('menu');
+        if (sessionStorage.getItem('titi_cam')) {
+          sessionStorage.removeItem('titi_cam');
+          setShowPhotoUpload(true);
+        }
+      }
+    } catch {}
+  }, [eventId]);
+
+  // Save guest info whenever it changes
+  useEffect(() => {
+    if (!guestName) return;
+    try {
+      localStorage.setItem(`titi_${eventId}`, JSON.stringify({ guestName, table, seat, screen }));
+    } catch {}
+  }, [eventId, guestName, table, seat, screen]);
+
   useEffect(() => {
     Promise.all([
       fetch(`${API_URL}/api/events/${eventId}`).then(r => r.json()),

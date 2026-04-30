@@ -22,6 +22,12 @@ const STICKERS = [
   { emoji: '🌹', label: 'Rose' },
 ];
 
+const PHRASES = [
+  'Congratulations!', 'Beautiful Bride!', 'Hey Macarena!', "Here's to You!",
+  'Kiss the Bride!', 'Cheers!', 'To Love & Laughter', 'Best Day Ever!',
+  'I Do!', 'Happily Ever After', 'Mr. & Mrs.!', 'Just Married!',
+];
+
 const COLORS = ['#ffffff', '#000000', '#ff3030', '#ff8c00', '#ffd700', '#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#06b6d4'];
 
 const FONTS = [
@@ -90,6 +96,7 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
       } else if (obj.type === 'sticker') {
         ctx.save();
         ctx.translate(obj.x, obj.y);
+        if (obj.rotation) ctx.rotate(obj.rotation * Math.PI / 180);
         ctx.font = `${obj.size}px serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -101,35 +108,29 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
           ctx.setLineDash([8, 4]);
           ctx.strokeRect(-half, -half, half * 2, half * 2);
           ctx.setLineDash([]);
-          ctx.fillStyle = '#fff';
-          ctx.fillRect(half - 15, half - 15, 20, 20);
-          ctx.strokeStyle = '#555';
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(half - 15, half - 15, 20, 20);
-          ctx.font = `${Math.max(12, obj.size * 0.18)}px sans-serif`;
-          ctx.fillStyle = '#333';
-          ctx.fillText('⤡', half - 5, half - 5);
         }
         ctx.restore();
       } else if (obj.type === 'text') {
         ctx.save();
+        ctx.translate(obj.x, obj.y);
+        if (obj.rotation) ctx.rotate(obj.rotation * Math.PI / 180);
         ctx.font = `bold ${obj.fontSize}px ${obj.fontFamily}`;
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'top';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         const outline = obj.color === '#000000' ? '#ffffff' : '#000000';
         ctx.strokeStyle = outline;
         ctx.lineWidth = Math.max(4, obj.fontSize * 0.12);
         ctx.lineJoin = 'round';
-        ctx.strokeText(obj.text, obj.x, obj.y);
+        ctx.strokeText(obj.text, 0, 0);
         ctx.fillStyle = obj.color;
-        ctx.fillText(obj.text, obj.x, obj.y);
+        ctx.fillText(obj.text, 0, 0);
         if (obj.id === selId) {
-          const w = ctx.measureText(obj.text).width;
-          const h = obj.fontSize * 1.2;
+          const w = ctx.measureText(obj.text).width / 2 + 8;
+          const h = obj.fontSize / 2 + 8;
           ctx.strokeStyle = 'rgba(255,255,255,0.9)';
           ctx.lineWidth = 2;
           ctx.setLineDash([5, 3]);
-          ctx.strokeRect(obj.x - 6, obj.y - 6, w + 12, h + 12);
+          ctx.strokeRect(-w, -h, w * 2, h * 2);
           ctx.setLineDash([]);
         }
         ctx.restore();
@@ -152,7 +153,6 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
     if (loaded.current) drawCanvas();
   }, [objects, selectedId, drawCanvas]);
 
-  // Attach non-passive touch + mouse listeners after image is set
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !imgSrc) return;
@@ -173,9 +173,9 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
       if (obj.type === 'text') {
         const ctx = canvas.getContext('2d');
         ctx.font = `bold ${obj.fontSize}px ${obj.fontFamily}`;
-        const w = ctx.measureText(obj.text).width + 16;
-        const h = obj.fontSize * 1.4 + 12;
-        return x >= obj.x - 6 && x <= obj.x + w && y >= obj.y - 6 && y <= obj.y + h;
+        const w = ctx.measureText(obj.text).width / 2 + 12;
+        const h = obj.fontSize / 2 + 12;
+        return x >= obj.x - w && x <= obj.x + w && y >= obj.y - h && y <= obj.y + h;
       }
       return false;
     };
@@ -213,7 +213,8 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
         if (selId !== null) {
           const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
           const obj = objectsRef.current.find(o => o.id === selId);
-          touchState.current = { ...touchState.current, pinching: true, startDist: dist, startSize: obj?.size || 80, objId: selId };
+          const startSize = obj?.type === 'sticker' ? obj.size : obj?.fontSize || 80;
+          touchState.current = { ...touchState.current, pinching: true, startDist: dist, startSize, objId: selId };
         }
       }
     };
@@ -223,8 +224,13 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
       const ts = touchState.current;
       if (e.touches.length === 2 && ts.pinching && ts.objId !== null) {
         const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-        const newSize = Math.max(30, Math.min(ts.startSize * (dist / ts.startDist), 500));
-        setObjects(prev => prev.map(o => (o.id === ts.objId && o.type === 'sticker') ? { ...o, size: newSize } : o));
+        const scale = dist / ts.startDist;
+        setObjects(prev => prev.map(o => {
+          if (o.id !== ts.objId) return o;
+          if (o.type === 'sticker') return { ...o, size: Math.max(30, Math.min(ts.startSize * scale, 500)) };
+          if (o.type === 'text') return { ...o, fontSize: Math.max(16, Math.min(ts.startSize * scale, 300)) };
+          return o;
+        }));
         return;
       }
       if (e.touches.length === 1 && !ts.pinching) {
@@ -314,11 +320,12 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
     drawCanvas();
   };
 
-  const pick = (capture) => {
+  const pick = (camera) => {
+    sessionStorage.setItem('titi_cam', '1');
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    if (capture) input.capture = 'environment';
+    if (camera) input.capture = 'environment';
     input.style.display = 'none';
     document.body.appendChild(input);
     input.onchange = (e) => {
@@ -341,7 +348,21 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
     if (!canvas) return;
     const size = Math.round(Math.min(canvas.width, canvas.height) * 0.2);
     const id = nextId++;
-    setObjects(prev => [...prev, { id, type: 'sticker', emoji, x: canvas.width / 2, y: canvas.height / 2, size }]);
+    setObjects(prev => [...prev, { id, type: 'sticker', emoji, x: canvas.width / 2, y: canvas.height / 2, size, rotation: 0 }]);
+    setSelectedId(id);
+    selectedIdRef.current = id;
+  };
+
+  const addPhrase = (phrase) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const fontSize = Math.round(Math.min(canvas.width, canvas.height) * 0.09);
+    const id = nextId++;
+    setObjects(prev => [...prev, {
+      id, type: 'text', text: phrase,
+      x: canvas.width / 2, y: canvas.height * 0.15,
+      fontSize, color: textColor, fontFamily: textFont, rotation: 0,
+    }]);
     setSelectedId(id);
     selectedIdRef.current = id;
   };
@@ -350,23 +371,36 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
     if (!textInput.trim()) { setShowTextInput(false); return; }
     const canvas = canvasRef.current;
     const fontSize = Math.round(Math.min(canvas.width, canvas.height) * 0.09);
-    const pos = textPendingPos || { x: canvas.width * 0.08, y: canvas.height * 0.08 };
+    const pos = textPendingPos || { x: canvas.width / 2, y: canvas.height * 0.15 };
     const id = nextId++;
-    setObjects(prev => [...prev, { id, type: 'text', text: textInput.trim(), x: pos.x, y: pos.y, fontSize, color: textColor, fontFamily: textFont }]);
+    setObjects(prev => [...prev, { id, type: 'text', text: textInput.trim(), x: pos.x, y: pos.y, fontSize, color: textColor, fontFamily: textFont, rotation: 0 }]);
     setSelectedId(id);
     selectedIdRef.current = id;
     setTextInput('');
     setShowTextInput(false);
   };
 
-  const undo = () => {
-    setObjects(prev => prev.slice(0, -1));
-    setSelectedId(null);
-    selectedIdRef.current = null;
+  const rotateSelected = (deg) => {
+    setObjects(prev => prev.map(o => o.id !== selectedId ? o : { ...o, rotation: ((o.rotation || 0) + deg + 360) % 360 }));
+  };
+
+  const resizeSelected = (factor) => {
+    setObjects(prev => prev.map(o => {
+      if (o.id !== selectedId) return o;
+      if (o.type === 'sticker') return { ...o, size: Math.max(24, Math.min(o.size * factor, 600)) };
+      if (o.type === 'text') return { ...o, fontSize: Math.max(14, Math.min(o.fontSize * factor, 400)) };
+      return o;
+    }));
   };
 
   const deleteSelected = () => {
     setObjects(prev => prev.filter(o => o.id !== selectedId));
+    setSelectedId(null);
+    selectedIdRef.current = null;
+  };
+
+  const undo = () => {
+    setObjects(prev => prev.slice(0, -1));
     setSelectedId(null);
     selectedIdRef.current = null;
   };
@@ -398,23 +432,18 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
     }
   };
 
-  // ── Success ───────────────────────────────────────────────────────────────
+  const selectedObj = objects.find(o => o.id === selectedId);
+
   if (done) return (
     <div style={overlay}>
       <div style={sheet}>
         <div style={{ textAlign: 'center', padding: '12px 0 8px' }}>
           <div style={{ fontSize: 64, marginBottom: 14 }}>🎉</div>
           <h2 style={{ color: '#d4a843', fontWeight: 900, fontSize: 22, marginBottom: 8 }}>Photo Shared!</h2>
-          <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 15, lineHeight: 1.5, marginBottom: 6 }}>
-            Your photo is now in the event gallery.
-          </p>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginBottom: 28, lineHeight: 1.5 }}>
-            The couple and organizer can see it immediately. After the event, they can share a gallery link with guests.
-          </p>
+          <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 15, lineHeight: 1.5, marginBottom: 6 }}>Your photo is now in the event gallery.</p>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginBottom: 28, lineHeight: 1.5 }}>The couple and organizer can see it immediately. After the event, they can share a gallery link with guests.</p>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={() => { setDone(false); setImgSrc(null); setObjects([]); }} style={bStyle('rgba(255,255,255,0.08)', '#fff', '1px solid rgba(255,255,255,0.15)')}>
-              Share Another
-            </button>
+            <button onClick={() => { setDone(false); setImgSrc(null); setObjects([]); }} style={bStyle('rgba(255,255,255,0.08)', '#fff', '1px solid rgba(255,255,255,0.15)')}>Share Another</button>
             <button onClick={onClose} style={bStyle('#d4a843', '#0a0a0a')}>Done</button>
           </div>
         </div>
@@ -422,7 +451,6 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
     </div>
   );
 
-  // ── Picker ────────────────────────────────────────────────────────────────
   if (!imgSrc) return (
     <div style={overlay}>
       <div style={sheet}>
@@ -433,29 +461,19 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <button onClick={() => pick(true)} style={bStyle('#d4a843', '#0a0a0a')}>📷 Take a Photo</button>
           <button onClick={() => pick(false)} style={bStyle('rgba(255,255,255,0.09)', '#fff', '1px solid rgba(255,255,255,0.18)')}>🖼 Choose from Gallery</button>
-          <button disabled style={{ ...bStyle('rgba(255,255,255,0.04)', 'rgba(255,255,255,0.22)', '1px solid rgba(255,255,255,0.07)'), cursor: 'not-allowed' }}>
-            🎬 Video — Coming Soon
-          </button>
+          <button disabled style={{ ...bStyle('rgba(255,255,255,0.04)', 'rgba(255,255,255,0.22)', '1px solid rgba(255,255,255,0.07)'), cursor: 'not-allowed' }}>🎬 Video — Coming Soon</button>
         </div>
       </div>
     </div>
   );
 
-  // ── Editor ────────────────────────────────────────────────────────────────
   return (
     <div style={overlay}>
       <div style={{ ...sheet, padding: '14px 0 44px' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, padding: '0 16px' }}>
           <button onClick={() => { setImgSrc(null); setObjects([]); setSelectedId(null); }} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: 14, cursor: 'pointer', fontWeight: 700 }}>← Retake</button>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {objects.length > 0 && (
-              <button onClick={undo} style={{ background: 'rgba(255,255,255,0.07)', border: 'none', color: '#94a3b8', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>↩ Undo</button>
-            )}
-            {selectedId !== null && (
-              <button onClick={deleteSelected} style={{ background: 'rgba(239,68,68,0.12)', border: 'none', color: '#ef4444', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>🗑 Delete</button>
-            )}
-          </div>
+          <button onClick={undo} disabled={objects.length === 0} style={{ background: objects.length > 0 ? 'rgba(255,255,255,0.07)' : 'transparent', border: 'none', color: objects.length > 0 ? '#94a3b8' : 'rgba(255,255,255,0.2)', borderRadius: 8, padding: '5px 12px', cursor: objects.length > 0 ? 'pointer' : 'default', fontSize: 13, fontWeight: 700 }}>↩ Undo</button>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 24, cursor: 'pointer', lineHeight: 1 }}>×</button>
         </div>
 
@@ -465,12 +483,21 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
           <img ref={imgRef} src={imgSrc} onLoad={onImgLoad} style={{ display: 'none' }} />
           {tool === 'text' && !showTextInput && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-              <div style={{ background: 'rgba(0,0,0,0.6)', borderRadius: 10, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 700 }}>
-                Tap photo to place text
-              </div>
+              <div style={{ background: 'rgba(0,0,0,0.6)', borderRadius: 10, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 700 }}>Tap photo to place text</div>
             </div>
           )}
         </div>
+
+        {/* Selected object toolbar */}
+        {selectedObj && selectedObj.type !== 'path' && (
+          <div style={{ display: 'flex', gap: 6, padding: '10px 16px', justifyContent: 'center', background: 'rgba(212,168,67,0.08)', borderTop: '1px solid rgba(212,168,67,0.15)', borderBottom: '1px solid rgba(212,168,67,0.15)' }}>
+            <ctrlBtn label="↺" title="Rotate left" onClick={() => rotateSelected(-15)} />
+            <ctrlBtn label="↻" title="Rotate right" onClick={() => rotateSelected(15)} />
+            <ctrlBtn label="−" title="Smaller" onClick={() => resizeSelected(0.82)} />
+            <ctrlBtn label="+" title="Bigger" onClick={() => resizeSelected(1.22)} />
+            <button onClick={deleteSelected} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13, background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>🗑 Delete</button>
+          </div>
+        )}
 
         {/* Tool tabs */}
         <div style={{ display: 'flex', margin: '12px 16px 0', background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: 3 }}>
@@ -489,7 +516,7 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
           {tool === 'sticker' && (
             <>
               <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
-                Tap to add · Drag to move · Pinch to resize
+                Tap to add · Drag to move · Pinch or use +/− to resize
               </p>
               <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6, scrollbarWidth: 'none' }}>
                 {STICKERS.map(s => (
@@ -512,20 +539,13 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
               <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>Color</p>
               <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
                 {COLORS.map(c => (
-                  <button key={c} onClick={() => { setDrawColor(c); drawColorRef.current = c; }} style={{
-                    width: 32, height: 32, borderRadius: '50%', background: c, flexShrink: 0,
-                    border: drawColor === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.2)', cursor: 'pointer',
-                  }} />
+                  <button key={c} onClick={() => { setDrawColor(c); drawColorRef.current = c; }} style={{ width: 32, height: 32, borderRadius: '50%', background: c, flexShrink: 0, border: drawColor === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.2)', cursor: 'pointer' }} />
                 ))}
               </div>
               <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>Brush Size</p>
               <div style={{ display: 'flex', gap: 8 }}>
                 {[{ label: 'Fine', size: 5 }, { label: 'Medium', size: 12 }, { label: 'Thick', size: 24 }, { label: 'Marker', size: 44 }].map(b => (
-                  <button key={b.label} onClick={() => { setDrawSize(b.size); drawSizeRef.current = b.size; }} style={{
-                    padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 12,
-                    background: drawSize === b.size ? '#d4a843' : 'rgba(255,255,255,0.08)',
-                    color: drawSize === b.size ? '#0a0a0a' : '#94a3b8',
-                  }}>{b.label}</button>
+                  <button key={b.label} onClick={() => { setDrawSize(b.size); drawSizeRef.current = b.size; }} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 12, background: drawSize === b.size ? '#d4a843' : 'rgba(255,255,255,0.08)', color: drawSize === b.size ? '#0a0a0a' : '#94a3b8' }}>{b.label}</button>
                 ))}
               </div>
             </>
@@ -533,33 +553,33 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
 
           {tool === 'text' && (
             <>
-              <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>Text Color</p>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+              <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>Quick Phrases</p>
+              <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none', marginBottom: 4 }}>
+                {PHRASES.map(p => (
+                  <button key={p} onClick={() => addPhrase(p)} style={{
+                    flexShrink: 0, padding: '6px 12px', borderRadius: 20, border: '1px solid rgba(212,168,67,0.35)',
+                    background: 'rgba(212,168,67,0.08)', color: '#d4a843', fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap',
+                  }}>{p}</button>
+                ))}
+              </div>
+              <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>Color</p>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
                 {COLORS.map(c => (
-                  <button key={c} onClick={() => setTextColor(c)} style={{
-                    width: 32, height: 32, borderRadius: '50%', background: c, flexShrink: 0,
-                    border: textColor === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.2)', cursor: 'pointer',
-                  }} />
+                  <button key={c} onClick={() => setTextColor(c)} style={{ width: 32, height: 32, borderRadius: '50%', background: c, flexShrink: 0, border: textColor === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.2)', cursor: 'pointer' }} />
                 ))}
               </div>
               <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>Font</p>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
                 {FONTS.map(f => (
-                  <button key={f.value} onClick={() => setTextFont(f.value)} style={{
-                    padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13,
-                    fontFamily: f.value,
-                    background: textFont === f.value ? '#d4a843' : 'rgba(255,255,255,0.08)',
-                    color: textFont === f.value ? '#0a0a0a' : '#94a3b8',
-                  }}>{f.label}</button>
+                  <button key={f.value} onClick={() => setTextFont(f.value)} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13, fontFamily: f.value, background: textFont === f.value ? '#d4a843' : 'rgba(255,255,255,0.08)', color: textFont === f.value ? '#0a0a0a' : '#94a3b8' }}>{f.label}</button>
                 ))}
               </div>
-              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, marginTop: 10 }}>Tap the photo above to place your text · Drag to move it</p>
+              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, marginTop: 4 }}>Tap a phrase above or tap the photo to type your own · Then drag, resize, or rotate it</p>
             </>
           )}
         </div>
 
         {error && <p style={{ color: '#ef4444', fontSize: 13, margin: '10px 16px 0' }}>{error}</p>}
-
         <div style={{ padding: '14px 16px 0' }}>
           <button onClick={upload} disabled={uploading} style={bStyle('#d4a843', '#0a0a0a')}>
             {uploading ? 'Sharing...' : '🥂 Share with the Party!'}
@@ -567,19 +587,11 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
         </div>
       </div>
 
-      {/* Text input overlay */}
       {showTextInput && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div style={{ background: '#1a0f35', border: '1px solid rgba(212,168,67,0.3)', borderRadius: '20px 20px 0 0', padding: '20px 20px 48px', width: '100%', maxWidth: 480 }}>
             <h3 style={{ color: '#fff', fontWeight: 800, fontSize: 16, marginBottom: 12 }}>Add Text</h3>
-            <input
-              autoFocus
-              value={textInput}
-              onChange={e => setTextInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && placeText()}
-              placeholder="Type something..."
-              style={{ width: '100%', padding: '12px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 16, fontFamily: textFont, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }}
-            />
+            <input autoFocus value={textInput} onChange={e => setTextInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && placeText()} placeholder="Type something..." style={{ width: '100%', padding: '12px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 16, fontFamily: textFont, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setShowTextInput(false)} style={bStyle('rgba(255,255,255,0.08)', '#fff', '1px solid rgba(255,255,255,0.15)')}>Cancel</button>
               <button onClick={placeText} disabled={!textInput.trim()} style={bStyle('#d4a843', '#0a0a0a')}>Add to Photo</button>
@@ -588,6 +600,12 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
         </div>
       )}
     </div>
+  );
+}
+
+function ctrlBtn({ label, onClick }) {
+  return (
+    <button onClick={onClick} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 15, background: 'rgba(255,255,255,0.09)', color: '#fff', minWidth: 40 }}>{label}</button>
   );
 }
 
@@ -606,9 +624,5 @@ const sheet = {
 };
 
 function bStyle(bg, color, border = 'none') {
-  return {
-    padding: '14px', borderRadius: 12, background: bg, color, border,
-    fontSize: 15, fontWeight: 700, cursor: 'pointer', width: '100%',
-    transition: 'opacity 0.15s',
-  };
+  return { padding: '14px', borderRadius: 12, background: bg, color, border, fontSize: 15, fontWeight: 700, cursor: 'pointer', width: '100%', transition: 'opacity 0.15s' };
 }

@@ -97,21 +97,22 @@ export default function ManagerView() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'rgba(8,1,20,0.97)', position: 'relative', zIndex: 1 }}>
-      <div style={{ background: 'linear-gradient(135deg, #0d0920, #130d28)', borderBottom: '1px solid rgba(212,168,67,0.2)', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 2px 20px rgba(0,0,0,0.4)' }}>
-        <div>
-          <span style={{ color: '#d4a843', fontWeight: 900, fontSize: 16 }}>{event.name}</span>
-          <span style={{ color: '#64748b', fontSize: 13, marginLeft: 12 }}>Manager</span>
+      <div style={{ background: 'linear-gradient(135deg, #0d0920, #130d28)', borderBottom: '1px solid rgba(212,168,67,0.2)', padding: '0 12px', minHeight: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, boxShadow: '0 2px 20px rgba(0,0,0,0.4)', flexWrap: 'wrap' }}>
+        <div style={{ minWidth: 0, paddingTop: 10, paddingBottom: 10 }}>
+          <span style={{ color: '#d4a843', fontWeight: 900, fontSize: 15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: '45vw' }}>{event.name}</span>
+          <span style={{ color: '#64748b', fontSize: 12 }}>Manager</span>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0, paddingTop: 10, paddingBottom: 10 }}>
           {['orders', '86', 'photos'].map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
-              padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13,
+              padding: '6px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 12,
               background: tab === t ? '#d4a843' : '#1f2937', color: tab === t ? '#0a0a0a' : '#64748b',
+              whiteSpace: 'nowrap',
             }}>
-              {t === 'orders' ? `Orders${pending > 0 ? ` (${pending})` : ''}` : t === '86' ? '86 Items' : `Photos${photos.length > 0 ? ` (${photos.length})` : ''}`}
+              {t === 'orders' ? `Orders${pending > 0 ? ` (${pending})` : ''}` : t === '86' ? '86' : `Photos${photos.length > 0 ? ` (${photos.length})` : ''}`}
             </button>
           ))}
-          <button onClick={() => setAuthed(false)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#1f2937', color: '#64748b', cursor: 'pointer', fontSize: 13 }}>Lock</button>
+          <button onClick={() => setAuthed(false)} style={{ padding: '6px 10px', borderRadius: 8, border: 'none', background: '#1f2937', color: '#64748b', cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap' }}>Lock</button>
         </div>
       </div>
 
@@ -155,7 +156,8 @@ export default function ManagerView() {
         {tab === '86' && (
           <div style={{ background: '#111827', border: '1px solid #1f2937', borderRadius: 12, padding: 20 }}>
             <h2 style={{ color: '#e2e8f0', fontWeight: 800, marginBottom: 16 }}>86 Items</h2>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 320 }}>
               <thead>
                 <tr>
                   <th style={{ textAlign: 'left', color: '#64748b', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', padding: '0 12px 10px', borderBottom: '1px solid #1f2937' }}>Item</th>
@@ -186,6 +188,7 @@ export default function ManagerView() {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 
