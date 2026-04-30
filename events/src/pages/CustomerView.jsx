@@ -70,7 +70,7 @@ export default function CustomerView() {
 
   const bgStyle = event.photoUrl
     ? { backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.55), rgba(0,0,0,0.78)), url(${event.photoUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-    : { background: 'linear-gradient(135deg, #0a0a0a, #1a1a2e)' };
+    : {};
 
   if (ordered) return (
     <div className="ev-screen" style={bgStyle}>

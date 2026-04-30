@@ -54,7 +54,7 @@ export default function ManagerView() {
   if (!event) return <div className="ev-loading"><div className="ev-spinner" /></div>;
 
   if (!authed) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1 }}>
       <div className="ev-pin-card">
         <p style={{ color: '#d4a843', fontWeight: 900, fontSize: 18, marginBottom: 4 }}>{event.name}</p>
         <p style={{ color: '#94a3b8', fontSize: 14, marginBottom: 20 }}>Caterer / Manager Access</p>
@@ -78,8 +78,8 @@ export default function ManagerView() {
   const pending = orders.filter(o => o.status === 'pending').length;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a' }}>
-      <div style={{ background: '#111827', borderBottom: '1px solid #1f2937', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div style={{ minHeight: '100vh', background: 'rgba(8,1,20,0.97)', position: 'relative', zIndex: 1 }}>
+      <div style={{ background: 'linear-gradient(135deg, #0d0920, #130d28)', borderBottom: '1px solid rgba(212,168,67,0.2)', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 2px 20px rgba(0,0,0,0.4)' }}>
         <div>
           <span style={{ color: '#d4a843', fontWeight: 900, fontSize: 16 }}>{event.name}</span>
           <span style={{ color: '#64748b', fontSize: 13, marginLeft: 12 }}>Manager</span>

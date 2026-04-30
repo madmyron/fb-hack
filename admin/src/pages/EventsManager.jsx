@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 const API_URL = 'https://fb-hack-nx6t.onrender.com';
-const EVENTS_URL = 'https://tapittapitevents.vercel.app';
+const EVENTS_URL = 'https://events.tapittapit.com';
 
 const blank = { name: '', greeting: '', subgreeting: '', photoUrl: '', eventType: 'wedding', barType: 'open', tableCount: '10', seatsPerTable: '10', date: '', managerPin: '' };
 
