@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { API_URL } from '../config';
+import PhotoUpload from '../components/PhotoUpload.jsx';
 
 export default function CustomerView() {
   const { eventId } = useParams();
@@ -15,6 +16,7 @@ export default function CustomerView() {
   const [cart, setCart] = useState([]);
   const [ordered, setOrdered] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -174,7 +176,7 @@ export default function CustomerView() {
         ))}
       </div>
 
-      <div className="ev-items">
+      <div className="ev-items" style={{ paddingBottom: 80 }}>
         {activeCat?.items.map(item => {
           const qty = cart.find(c => c.id === item.id)?.qty || 0;
           if (item.soldOut) return (
@@ -183,7 +185,7 @@ export default function CustomerView() {
                 <p className="ev-item-name">{item.name}</p>
                 <p className="ev-item-desc">{item.description}</p>
               </div>
-              <span style={{ color: '#64748b', fontSize: 13, fontWeight: 700 }}>Sold Out</span>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700 }}>Sold Out</span>
             </div>
           );
           return (
@@ -208,6 +210,32 @@ export default function CustomerView() {
           );
         })}
       </div>
+
+      {/* Floating camera button */}
+      <button
+        onClick={() => setShowPhotoUpload(true)}
+        style={{
+          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(212,168,67,0.5)', borderRadius: 40,
+          padding: '12px 22px', color: '#d4a843', fontWeight: 800, fontSize: 15,
+          cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+          boxShadow: '0 4px 24px rgba(0,0,0,0.4)', zIndex: 20,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        📷 Share a Photo
+      </button>
+
+      {showPhotoUpload && (
+        <PhotoUpload
+          eventId={eventId}
+          guestName={guestName}
+          table={table}
+          onClose={() => setShowPhotoUpload(false)}
+          onUploaded={() => {}}
+        />
+      )}
     </div>
   );
 }

@@ -58,6 +58,8 @@ const makeEvent = (data) => ({
   menu: JSON.parse(JSON.stringify(DEFAULT_MENU)),
   eightySixed: [],
   orders: [],
+  photos: [],
+  galleryOpen: false,
   createdAt: new Date().toISOString(),
 });
 
@@ -149,6 +151,51 @@ router.post('/:id/eightysix', (req, res) => {
   if (idx >= 0) event.eightySixed.splice(idx, 1);
   else event.eightySixed.push(itemId);
   res.json(event.eightySixed);
+});
+
+// ── Photos ───────────────────────────────────────────────────────────────────
+
+router.get('/:id/photos', (req, res) => {
+  const event = events.get(req.params.id);
+  if (!event) return res.status(404).json({ error: 'Not found' });
+  res.json({ photos: event.photos, galleryOpen: event.galleryOpen });
+});
+
+router.post('/:id/photos', (req, res) => {
+  const event = events.get(req.params.id);
+  if (!event) return res.status(404).json({ error: 'Not found' });
+  const { url, guestName, table } = req.body;
+  if (!url) return res.status(400).json({ error: 'url required' });
+  const photo = {
+    id: `ph-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+    url,
+    guestName: guestName || 'Guest',
+    table: table || '',
+    uploadedAt: new Date().toISOString(),
+  };
+  event.photos.push(photo);
+  res.json(photo);
+});
+
+router.delete('/:id/photos/:photoId', (req, res) => {
+  const event = events.get(req.params.id);
+  if (!event) return res.status(404).json({ error: 'Not found' });
+  event.photos = event.photos.filter(p => p.id !== req.params.photoId);
+  res.json({ success: true });
+});
+
+router.patch('/:id/gallery', (req, res) => {
+  const event = events.get(req.params.id);
+  if (!event) return res.status(404).json({ error: 'Not found' });
+  event.galleryOpen = !!req.body.open;
+  res.json({ galleryOpen: event.galleryOpen });
+});
+
+// ── Upload URL (R2 presigned — wired after bucket enabled) ───────────────────
+
+router.post('/:id/photos/upload-url', async (req, res) => {
+  // Placeholder until R2 credentials are configured
+  res.status(503).json({ error: 'Storage not configured yet' });
 });
 
 module.exports = router;

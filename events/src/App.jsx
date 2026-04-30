@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import CustomerView from './pages/CustomerView.jsx';
 import BarDisplay from './pages/BarDisplay.jsx';
 import ManagerView from './pages/ManagerView.jsx';
+import GalleryView from './pages/GalleryView.jsx';
 import './events.css';
 
 function NoEvent() {
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/:eventId" element={<CustomerView />} />
         <Route path="/:eventId/bar" element={<BarDisplay />} />
         <Route path="/:eventId/manager" element={<ManagerView />} />
+        <Route path="/:eventId/gallery" element={<GalleryView />} />
       </Routes>
     </>
   );

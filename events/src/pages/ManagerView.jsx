@@ -11,6 +11,8 @@ export default function ManagerView() {
   const [orders, setOrders] = useState([]);
   const [menu, setMenu] = useState([]);
   const [soldOut, setSoldOut] = useState([]);
+  const [photos, setPhotos] = useState([]);
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const [tab, setTab] = useState('orders');
 
   useEffect(() => {
@@ -23,7 +25,8 @@ export default function ManagerView() {
       fetch(`${API_URL}/api/events/${eventId}/orders`).then(r => r.json()),
       fetch(`${API_URL}/api/events/${eventId}/menu`).then(r => r.json()),
       fetch(`${API_URL}/api/events/${eventId}/eightysix`).then(r => r.json()),
-    ]).then(([o, m, es]) => { setOrders(o); setMenu(m); setSoldOut(es); }).catch(() => {});
+      fetch(`${API_URL}/api/events/${eventId}/photos`).then(r => r.json()),
+    ]).then(([o, m, es, ph]) => { setOrders(o); setMenu(m); setSoldOut(es); setPhotos(ph.photos || []); setGalleryOpen(ph.galleryOpen); }).catch(() => {});
     load();
     const interval = setInterval(load, 8000);
     return () => clearInterval(interval);
@@ -39,6 +42,21 @@ export default function ManagerView() {
       if (next === event.managerPin) { setAuthed(true); }
       else { setTimeout(() => { setPin(''); setError('Incorrect PIN.'); }, 300); }
     }
+  };
+
+  const deletePhoto = async (photoId) => {
+    await fetch(`${API_URL}/api/events/${eventId}/photos/${photoId}`, { method: 'DELETE' });
+    setPhotos(prev => prev.filter(p => p.id !== photoId));
+  };
+
+  const toggleGallery = async () => {
+    const res = await fetch(`${API_URL}/api/events/${eventId}/gallery`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ open: !galleryOpen }),
+    });
+    const data = await res.json();
+    setGalleryOpen(data.galleryOpen);
   };
 
   const toggle86 = async (itemId) => {
@@ -85,12 +103,12 @@ export default function ManagerView() {
           <span style={{ color: '#64748b', fontSize: 13, marginLeft: 12 }}>Manager</span>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          {['orders', '86'].map(t => (
+          {['orders', '86', 'photos'].map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13,
               background: tab === t ? '#d4a843' : '#1f2937', color: tab === t ? '#0a0a0a' : '#64748b',
             }}>
-              {t === 'orders' ? `Orders ${pending > 0 ? `(${pending})` : ''}` : '86 Items'}
+              {t === 'orders' ? `Orders${pending > 0 ? ` (${pending})` : ''}` : t === '86' ? '86 Items' : `Photos${photos.length > 0 ? ` (${photos.length})` : ''}`}
             </button>
           ))}
           <button onClick={() => setAuthed(false)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#1f2937', color: '#64748b', cursor: 'pointer', fontSize: 13 }}>Lock</button>
@@ -168,6 +186,55 @@ export default function ManagerView() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {tab === 'photos' && (
+          <div>
+            {/* Gallery toggle + share link */}
+            <div style={{ background: 'rgba(13,9,32,0.8)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: 12, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+              <div>
+                <p style={{ color: '#e2e8f0', fontWeight: 700, fontSize: 14 }}>Guest Gallery Link</p>
+                <p style={{ color: '#64748b', fontSize: 12, marginTop: 2 }}>
+                  {galleryOpen ? 'Guests can view the gallery at the link below' : 'Enable to give guests access to the full gallery'}
+                </p>
+                {galleryOpen && (
+                  <p style={{ color: '#d4a843', fontSize: 12, marginTop: 6, wordBreak: 'break-all' }}>
+                    {window.location.origin}/{eventId}/gallery
+                  </p>
+                )}
+              </div>
+              <button onClick={toggleGallery} style={{
+                padding: '8px 18px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13,
+                background: galleryOpen ? 'rgba(239,68,68,0.12)' : 'rgba(34,197,94,0.12)',
+                color: galleryOpen ? '#ef4444' : '#22c55e',
+              }}>
+                {galleryOpen ? 'Close Gallery' : 'Open Gallery'}
+              </button>
+            </div>
+
+            {photos.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '48px 24px', color: '#475569' }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>📷</div>
+                <p style={{ fontSize: 15 }}>No photos yet — guests can share from the drink menu.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+                {[...photos].reverse().map(photo => (
+                  <div key={photo.id} style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', background: '#0d0920', aspectRatio: '1' }}>
+                    <img src={photo.url} alt={photo.guestName} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.8))', padding: '20px 8px 8px' }}>
+                      <p style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>{photo.guestName}</p>
+                      {photo.table && <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11 }}>Table {photo.table}</p>}
+                    </div>
+                    <button onClick={() => deletePhoto(photo.id)} style={{
+                      position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.6)', border: 'none',
+                      color: '#ef4444', borderRadius: 6, padding: '2px 7px', cursor: 'pointer', fontSize: 14, fontWeight: 700,
+                    }}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
