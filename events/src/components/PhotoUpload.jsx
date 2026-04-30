@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { API_URL } from '../config';
+import { API_URL, SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
 
 const STICKERS = [
   { emoji: '👑', label: 'Crown' },
@@ -416,13 +416,45 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
     setUploading(true);
     setError('');
     try {
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      // Scale down for export
+      const exportCanvas = document.createElement('canvas');
+      const MAX_EXPORT = 800;
+      let ew = canvas.width, eh = canvas.height;
+      if (ew > MAX_EXPORT || eh > MAX_EXPORT) {
+        if (ew > eh) { eh = Math.round(eh * MAX_EXPORT / ew); ew = MAX_EXPORT; }
+        else { ew = Math.round(ew * MAX_EXPORT / eh); eh = MAX_EXPORT; }
+      }
+      exportCanvas.width = ew;
+      exportCanvas.height = eh;
+      exportCanvas.getContext('2d').drawImage(canvas, 0, 0, ew, eh);
+
+      // Get image as blob
+      const blob = await new Promise(resolve => exportCanvas.toBlob(resolve, 'image/jpeg', 0.75));
+
+      // Upload directly to Supabase Storage (bypasses Render proxy size limits)
+      const filename = `${eventId}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+      const storageRes = await fetch(
+        `${SUPABASE_URL}/storage/v1/object/event-photos/${filename}`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'image/jpeg',
+          },
+          body: blob,
+        }
+      );
+      if (!storageRes.ok) throw new Error('Storage upload failed');
+
+      const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/event-photos/${filename}`;
+
+      // Save only the URL through the server
       const res = await fetch(`${API_URL}/api/events/${eventId}/photos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: dataUrl, guestName, table }),
+        body: JSON.stringify({ url: publicUrl, guestName, table }),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) throw new Error('Save failed');
       onUploaded(await res.json());
       setDone(true);
     } catch {
