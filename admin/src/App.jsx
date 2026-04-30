@@ -42,7 +42,7 @@ function PinLogin({ onLogin }) {
   return (
     <div className="pin-gate">
       <div className="pin-card">
-        <div className="admin-logo-text">F&B Hack</div>
+        <div className="admin-logo-text">Tap It Tap It</div>
         <p className="pin-title">Owner Portal</p>
         <p className="pin-subtitle">Enter your PIN to continue</p>
         <div className="pin-dots">
@@ -154,7 +154,7 @@ export default function App() {
     <div className="admin-app">
       <div className="admin-header">
         <div className="admin-brand">
-          <span className="admin-logo-text">F&B Hack</span>
+          <span className="admin-logo-text">Tap It Tap It</span>
           <span className="admin-portal-badge">Owner Portal</span>
         </div>
         <button className="admin-lock-btn" onClick={() => setAuthed(false)}>Lock</button>

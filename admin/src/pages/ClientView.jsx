@@ -21,7 +21,7 @@ export default function ClientView({ client, orders, onBack, onUpdateRate }) {
       <div className="admin-app">
         <div className="admin-header no-print">
           <div className="admin-brand">
-            <span className="admin-logo-text">F&B Hack</span>
+            <span className="admin-logo-text">Tap It Tap It</span>
           </div>
           <div style={{ display: 'flex', gap: 12 }}>
             <button className="admin-back-btn" onClick={() => setShowInvoice(false)}>← Back</button>
@@ -32,8 +32,8 @@ export default function ClientView({ client, orders, onBack, onUpdateRate }) {
         <div className="invoice-page">
           <div className="invoice-header">
             <div>
-              <h1 className="invoice-brand">F&B Hack</h1>
-              <p style={{ color: '#64748b', fontSize: 14, marginTop: 4 }}>fnbhack.com</p>
+              <h1 className="invoice-brand">Tap It Tap It</h1>
+              <p style={{ color: '#64748b', fontSize: 14, marginTop: 4 }}>tapittapit.com</p>
             </div>
             <div style={{ textAlign: 'right' }}>
               <p className="invoice-number">{invoiceNum}</p>
@@ -45,7 +45,7 @@ export default function ClientView({ client, orders, onBack, onUpdateRate }) {
           <div className="invoice-parties">
             <div>
               <p className="invoice-party-label">From</p>
-              <p className="invoice-party-name">F&B Hack</p>
+              <p className="invoice-party-name">Tap It Tap It</p>
               <p style={{ color: '#64748b', fontSize: 14, marginTop: 4 }}>Platform Services</p>
               <p style={{ color: '#64748b', fontSize: 14 }}>michael@dasaroland.com</p>
             </div>
@@ -71,7 +71,7 @@ export default function ClientView({ client, orders, onBack, onUpdateRate }) {
             </thead>
             <tbody>
               <tr>
-                <td>F&B Hack Platform Fee — {monthName}</td>
+                <td>Tap It Tap It Platform Fee — {monthName}</td>
                 <td style={{ textAlign: 'center' }}>{orders.length}</td>
                 <td style={{ textAlign: 'right' }}>${total.toFixed(2)}</td>
                 <td style={{ textAlign: 'right' }}>{client.rate}%</td>
@@ -86,7 +86,7 @@ export default function ClientView({ client, orders, onBack, onUpdateRate }) {
           </div>
 
           <p style={{ marginTop: 48, color: '#94a3b8', fontSize: 13, textAlign: 'center' }}>
-            Thank you for partnering with F&B Hack. Questions? michael@dasaroland.com
+            Thank you for partnering with Tap It Tap It. Questions? michael@dasaroland.com
           </p>
         </div>
       </div>
