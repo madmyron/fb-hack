@@ -21,6 +21,7 @@ const TAB_COLORS = {
 export default function MenuBrowser({ cart, cartCount, onAdd, onRemove, onViewCart }) {
   const [menu, setMenu] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
+  const [loading, setLoading] = useState(true);
   const tabsRef = useRef(null);
 
   useEffect(() => {
@@ -29,8 +30,18 @@ export default function MenuBrowser({ cart, cartCount, onAdd, onRemove, onViewCa
       .then(data => {
         setMenu(data);
         if (data.length > 0) setActiveCategory(data[0].id);
-      });
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, []);
+
+  if (loading) return (
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+      <div style={{ fontSize: 40 }}>🍹</div>
+      <p style={{ color: 'var(--text-muted)', fontSize: 15, fontWeight: 600 }}>Loading the menu…</p>
+      <p style={{ color: 'var(--text-muted)', fontSize: 12, opacity: 0.6 }}>First load may take up to 30 seconds</p>
+    </div>
+  );
 
   const scrollTabs = (dir) => {
     tabsRef.current?.scrollBy({ left: dir * 200, behavior: 'smooth' });

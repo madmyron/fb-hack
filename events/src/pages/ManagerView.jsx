@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { API_URL } from '../config';
+import { API_URL, SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
 
 export default function ManagerView() {
   const { eventId } = useParams();
@@ -57,6 +57,24 @@ export default function ManagerView() {
     });
     const data = await res.json();
     setGalleryOpen(data.galleryOpen);
+  };
+
+  const uploadEventPhoto = async (file) => {
+    if (!file) return;
+    const filename = `event-covers/${eventId}-${Date.now()}.jpg`;
+    const storageRes = await fetch(`${SUPABASE_URL}/storage/v1/object/event-photos/${filename}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': file.type },
+      body: file,
+    });
+    if (!storageRes.ok) { alert('Upload failed. Please try again.'); return; }
+    const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/event-photos/${filename}`;
+    await fetch(`${API_URL}/api/events/${eventId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ photoUrl: publicUrl }),
+    });
+    setEvent(ev => ({ ...ev, photoUrl: publicUrl }));
   };
 
   const toggle86 = async (itemId) => {
@@ -194,6 +212,18 @@ export default function ManagerView() {
 
         {tab === 'photos' && (
           <div>
+            {/* Event background photo */}
+            <div style={{ background: 'rgba(13,9,32,0.8)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: 12, padding: '16px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ color: '#e2e8f0', fontWeight: 700, fontSize: 14 }}>Event Background Photo</p>
+                <p style={{ color: '#64748b', fontSize: 12, marginTop: 2 }}>Shows behind the welcome screen — use a photo of the couple or venue</p>
+              </div>
+              <label style={{ padding: '8px 18px', borderRadius: 8, background: 'rgba(212,168,67,0.15)', color: '#d4a843', fontWeight: 700, fontSize: 13, cursor: 'pointer', flexShrink: 0 }}>
+                {event.photoUrl ? 'Change Photo' : 'Upload Photo'}
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => uploadEventPhoto(e.target.files[0])} />
+              </label>
+            </div>
+
             {/* Gallery toggle + share link */}
             <div style={{ background: 'rgba(13,9,32,0.8)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: 12, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
               <div>

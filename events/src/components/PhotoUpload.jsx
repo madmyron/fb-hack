@@ -320,12 +320,10 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
     drawCanvas();
   };
 
-  const pick = (camera) => {
-    sessionStorage.setItem('titi_cam', '1');
+  const pick = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    if (camera) input.capture = 'environment';
     input.style.display = 'none';
     document.body.appendChild(input);
     input.onchange = (e) => {
@@ -491,8 +489,7 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 26, cursor: 'pointer', lineHeight: 1 }}>×</button>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <button onClick={() => pick(true)} style={bStyle('#d4a843', '#0a0a0a')}>📷 Take a Photo</button>
-          <button onClick={() => pick(false)} style={bStyle('rgba(255,255,255,0.09)', '#fff', '1px solid rgba(255,255,255,0.18)')}>🖼 Choose from Gallery</button>
+          <button onClick={pick} style={bStyle('#d4a843', '#0a0a0a')}>📷 Add a Photo</button>
           <button disabled style={{ ...bStyle('rgba(255,255,255,0.04)', 'rgba(255,255,255,0.22)', '1px solid rgba(255,255,255,0.07)'), cursor: 'not-allowed' }}>🎬 Video — Coming Soon</button>
         </div>
       </div>
