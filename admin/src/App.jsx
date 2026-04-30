@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './admin.css';
 import ClientView from './pages/ClientView.jsx';
+import EventsManager from './pages/EventsManager.jsx';
 
 const OWNER_PIN = '1111';
 const API_URL = 'https://fb-hack-nx6t.onrender.com';
@@ -121,6 +122,8 @@ export default function App() {
     if (selectedClient?.id === id) setSelectedClient(c => ({ ...c, rate }));
   };
 
+  const [activeTab, setActiveTab] = useState('clients');
+
   if (!authed) return <PinLogin onLogin={() => setAuthed(true)} />;
 
   const getClientData = (client) => {
@@ -157,10 +160,22 @@ export default function App() {
           <span className="admin-logo-text">Tap It Tap It</span>
           <span className="admin-portal-badge">Owner Portal</span>
         </div>
-        <button className="admin-lock-btn" onClick={() => setAuthed(false)}>Lock</button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {['clients', 'events'].map(t => (
+            <button key={t} onClick={() => setActiveTab(t)} style={{
+              padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+              fontWeight: 700, fontSize: 13, textTransform: 'capitalize',
+              background: activeTab === t ? '#f97316' : '#1e293b',
+              color: activeTab === t ? 'white' : '#64748b',
+            }}>{t === 'clients' ? 'Clients' : 'Events'}</button>
+          ))}
+          <button className="admin-lock-btn" onClick={() => setAuthed(false)}>Lock</button>
+        </div>
       </div>
 
       <div className="admin-content">
+        {activeTab === 'events' && <EventsManager />}
+        {activeTab === 'clients' && <>
         <div className="admin-stats-row">
           <div className="admin-stat">
             <span className="admin-stat-label">Active Clients</span>
@@ -249,6 +264,7 @@ export default function App() {
             </tbody>
           </table>
         </div>
+        </>}
       </div>
     </div>
   );

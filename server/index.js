@@ -6,6 +6,7 @@ const menuRoutes = require('./routes/menu');
 const orderRoutes = require('./routes/orders');
 const promoRoutes = require('./routes/promos');
 const configRoutes = require('./routes/config');
+const eventRoutes = require('./routes/events');
 
 const app = express();
 const server = http.createServer(app);
@@ -19,6 +20,7 @@ app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orderRoutes(io));
 app.use('/api/promos', promoRoutes);
 app.use('/api/config', configRoutes);
+app.use('/api/events', eventRoutes);
 
 io.on('connection', () => {});
 
