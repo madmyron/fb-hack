@@ -4,7 +4,7 @@ import { API_URL } from '../config';
 const STICKERS = [
   { emoji: '👑', label: 'Crown' },
   { emoji: '👙', label: 'Spicy' },
-  { emoji: '🎊', label: 'Congrats' },
+  { emoji: '🎊', label: 'Confetti' },
   { emoji: '🎈', label: 'Balloons' },
   { emoji: '🎂', label: 'Cake' },
   { emoji: '🎆', label: 'Fireworks' },
@@ -16,33 +16,287 @@ const STICKERS = [
   { emoji: '🎉', label: 'Party' },
   { emoji: '💃', label: 'Dance' },
   { emoji: '🍾', label: 'Pop' },
+  { emoji: '😂', label: 'LOL' },
+  { emoji: '🔥', label: 'Fire' },
+  { emoji: '💯', label: '100' },
+  { emoji: '🌹', label: 'Rose' },
 ];
+
+const COLORS = ['#ffffff', '#000000', '#ff3030', '#ff8c00', '#ffd700', '#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#06b6d4'];
+
+const FONTS = [
+  { label: 'Classic', value: 'Georgia, serif' },
+  { label: 'Modern', value: 'Arial, sans-serif' },
+  { label: 'Fun', value: '"Comic Sans MS", cursive' },
+  { label: 'Bold', value: 'Impact, sans-serif' },
+];
+
+let nextId = 1;
 
 export default function PhotoUpload({ eventId, guestName, table, onClose, onUploaded }) {
   const [imgSrc, setImgSrc] = useState(null);
-  const [stickers, setStickers] = useState([]);
+  const [objects, setObjects] = useState([]);
+  const [tool, setTool] = useState('sticker');
+  const [drawColor, setDrawColor] = useState('#ff3030');
+  const [drawSize, setDrawSize] = useState(12);
+  const [textColor, setTextColor] = useState('#ffffff');
+  const [textFont, setTextFont] = useState('Arial, sans-serif');
+  const [showTextInput, setShowTextInput] = useState(false);
+  const [textInput, setTextInput] = useState('');
+  const [textPendingPos, setTextPendingPos] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
+
   const canvasRef = useRef(null);
   const imgRef = useRef(null);
   const loaded = useRef(false);
+  const objectsRef = useRef([]);
+  const selectedIdRef = useRef(null);
+  const toolRef = useRef('sticker');
+  const drawColorRef = useRef('#ff3030');
+  const drawSizeRef = useRef(12);
+  const touchState = useRef({ dragging: false, objId: null, lastX: 0, lastY: 0, pinching: false, startDist: 0, startSize: 0 });
+  const currentPathRef = useRef(null);
 
-  const draw = useCallback(() => {
+  useEffect(() => { objectsRef.current = objects; }, [objects]);
+  useEffect(() => { selectedIdRef.current = selectedId; }, [selectedId]);
+  useEffect(() => { toolRef.current = tool; }, [tool]);
+  useEffect(() => { drawColorRef.current = drawColor; }, [drawColor]);
+  useEffect(() => { drawSizeRef.current = drawSize; }, [drawSize]);
+
+  const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const img = imgRef.current;
     if (!canvas || !img || !loaded.current) return;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    const size = Math.round(Math.min(canvas.width, canvas.height) * 0.15);
-    ctx.font = `${size}px serif`;
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'center';
-    stickers.forEach(s => ctx.fillText(s.emoji, s.x, s.y));
-  }, [stickers]);
 
-  useEffect(() => { draw(); }, [draw]);
+    const objs = objectsRef.current;
+    const selId = selectedIdRef.current;
+
+    objs.forEach(obj => {
+      if (obj.type === 'path') {
+        if (obj.points.length < 2) return;
+        ctx.beginPath();
+        ctx.strokeStyle = obj.color;
+        ctx.lineWidth = obj.lineWidth;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        obj.points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+        ctx.stroke();
+      } else if (obj.type === 'sticker') {
+        ctx.save();
+        ctx.translate(obj.x, obj.y);
+        ctx.font = `${obj.size}px serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(obj.emoji, 0, 0);
+        if (obj.id === selId) {
+          const half = obj.size * 0.56;
+          ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+          ctx.lineWidth = Math.max(2, obj.size * 0.04);
+          ctx.setLineDash([8, 4]);
+          ctx.strokeRect(-half, -half, half * 2, half * 2);
+          ctx.setLineDash([]);
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(half - 15, half - 15, 20, 20);
+          ctx.strokeStyle = '#555';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(half - 15, half - 15, 20, 20);
+          ctx.font = `${Math.max(12, obj.size * 0.18)}px sans-serif`;
+          ctx.fillStyle = '#333';
+          ctx.fillText('⤡', half - 5, half - 5);
+        }
+        ctx.restore();
+      } else if (obj.type === 'text') {
+        ctx.save();
+        ctx.font = `bold ${obj.fontSize}px ${obj.fontFamily}`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        const outline = obj.color === '#000000' ? '#ffffff' : '#000000';
+        ctx.strokeStyle = outline;
+        ctx.lineWidth = Math.max(4, obj.fontSize * 0.12);
+        ctx.lineJoin = 'round';
+        ctx.strokeText(obj.text, obj.x, obj.y);
+        ctx.fillStyle = obj.color;
+        ctx.fillText(obj.text, obj.x, obj.y);
+        if (obj.id === selId) {
+          const w = ctx.measureText(obj.text).width;
+          const h = obj.fontSize * 1.2;
+          ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 3]);
+          ctx.strokeRect(obj.x - 6, obj.y - 6, w + 12, h + 12);
+          ctx.setLineDash([]);
+        }
+        ctx.restore();
+      }
+    });
+
+    if (currentPathRef.current && currentPathRef.current.points.length > 1) {
+      const p = currentPathRef.current;
+      ctx.beginPath();
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = p.lineWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      p.points.forEach((pt, i) => (i === 0 ? ctx.moveTo(pt.x, pt.y) : ctx.lineTo(pt.x, pt.y)));
+      ctx.stroke();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (loaded.current) drawCanvas();
+  }, [objects, selectedId, drawCanvas]);
+
+  // Attach non-passive touch + mouse listeners after image is set
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !imgSrc) return;
+
+    const getCoords = (clientX, clientY) => {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (clientX - rect.left) * (canvas.width / rect.width),
+        y: (clientY - rect.top) * (canvas.height / rect.height),
+      };
+    };
+
+    const hitTest = (obj, x, y) => {
+      if (obj.type === 'sticker') {
+        const half = obj.size * 0.56;
+        return x >= obj.x - half && x <= obj.x + half && y >= obj.y - half && y <= obj.y + half;
+      }
+      if (obj.type === 'text') {
+        const ctx = canvas.getContext('2d');
+        ctx.font = `bold ${obj.fontSize}px ${obj.fontFamily}`;
+        const w = ctx.measureText(obj.text).width + 16;
+        const h = obj.fontSize * 1.4 + 12;
+        return x >= obj.x - 6 && x <= obj.x + w && y >= obj.y - 6 && y <= obj.y + h;
+      }
+      return false;
+    };
+
+    const startAt = (x, y) => {
+      const objs = objectsRef.current;
+      let found = null;
+      for (let i = objs.length - 1; i >= 0; i--) {
+        if (objs[i].type !== 'path' && hitTest(objs[i], x, y)) { found = objs[i]; break; }
+      }
+      if (found) {
+        setSelectedId(found.id);
+        selectedIdRef.current = found.id;
+        touchState.current = { ...touchState.current, dragging: true, objId: found.id, lastX: x, lastY: y, pinching: false };
+      } else {
+        setSelectedId(null);
+        selectedIdRef.current = null;
+        touchState.current = { ...touchState.current, dragging: false, objId: null, lastX: x, lastY: y, pinching: false };
+        if (toolRef.current === 'draw') {
+          currentPathRef.current = { id: nextId++, color: drawColorRef.current, lineWidth: drawSizeRef.current, points: [{ x, y }] };
+        } else if (toolRef.current === 'text') {
+          setTextPendingPos({ x, y });
+          setShowTextInput(true);
+        }
+      }
+    };
+
+    const handleTouchStart = (e) => {
+      e.preventDefault();
+      if (e.touches.length === 1) {
+        const { x, y } = getCoords(e.touches[0].clientX, e.touches[0].clientY);
+        startAt(x, y);
+      } else if (e.touches.length === 2) {
+        const selId = selectedIdRef.current;
+        if (selId !== null) {
+          const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+          const obj = objectsRef.current.find(o => o.id === selId);
+          touchState.current = { ...touchState.current, pinching: true, startDist: dist, startSize: obj?.size || 80, objId: selId };
+        }
+      }
+    };
+
+    const handleTouchMove = (e) => {
+      e.preventDefault();
+      const ts = touchState.current;
+      if (e.touches.length === 2 && ts.pinching && ts.objId !== null) {
+        const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        const newSize = Math.max(30, Math.min(ts.startSize * (dist / ts.startDist), 500));
+        setObjects(prev => prev.map(o => (o.id === ts.objId && o.type === 'sticker') ? { ...o, size: newSize } : o));
+        return;
+      }
+      if (e.touches.length === 1 && !ts.pinching) {
+        const { x, y } = getCoords(e.touches[0].clientX, e.touches[0].clientY);
+        if (ts.dragging && ts.objId !== null) {
+          const dx = x - ts.lastX, dy = y - ts.lastY;
+          setObjects(prev => prev.map(o => o.id !== ts.objId ? o : { ...o, x: o.x + dx, y: o.y + dy }));
+          touchState.current = { ...ts, lastX: x, lastY: y };
+        } else if (toolRef.current === 'draw' && currentPathRef.current) {
+          currentPathRef.current.points.push({ x, y });
+          drawCanvas();
+        }
+      }
+    };
+
+    const handleTouchEnd = (e) => {
+      e.preventDefault();
+      if (toolRef.current === 'draw' && currentPathRef.current) {
+        const path = { ...currentPathRef.current, type: 'path' };
+        if (path.points.length > 1) setObjects(prev => [...prev, path]);
+        currentPathRef.current = null;
+      }
+      if (e.touches.length === 0) touchState.current = { ...touchState.current, dragging: false, pinching: false };
+    };
+
+    let mouseDown = false;
+    const handleMouseDown = (e) => {
+      mouseDown = true;
+      const { x, y } = getCoords(e.clientX, e.clientY);
+      startAt(x, y);
+    };
+    const handleMouseMove = (e) => {
+      if (!mouseDown) return;
+      const ts = touchState.current;
+      const { x, y } = getCoords(e.clientX, e.clientY);
+      if (ts.dragging && ts.objId !== null) {
+        const dx = x - ts.lastX, dy = y - ts.lastY;
+        setObjects(prev => prev.map(o => o.id !== ts.objId ? o : { ...o, x: o.x + dx, y: o.y + dy }));
+        touchState.current = { ...ts, lastX: x, lastY: y };
+      } else if (toolRef.current === 'draw' && currentPathRef.current) {
+        currentPathRef.current.points.push({ x, y });
+        drawCanvas();
+      }
+    };
+    const handleMouseUp = () => {
+      mouseDown = false;
+      if (toolRef.current === 'draw' && currentPathRef.current) {
+        const path = { ...currentPathRef.current, type: 'path' };
+        if (path.points.length > 1) setObjects(prev => [...prev, path]);
+        currentPathRef.current = null;
+      }
+      touchState.current = { ...touchState.current, dragging: false };
+    };
+
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mouseup', handleMouseUp);
+    canvas.addEventListener('mouseleave', handleMouseUp);
+
+    return () => {
+      canvas.removeEventListener('touchstart', handleTouchStart);
+      canvas.removeEventListener('touchmove', handleTouchMove);
+      canvas.removeEventListener('touchend', handleTouchEnd);
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mouseup', handleMouseUp);
+      canvas.removeEventListener('mouseleave', handleMouseUp);
+    };
+  }, [imgSrc, drawCanvas]);
 
   const onImgLoad = () => {
     const canvas = canvasRef.current;
@@ -57,7 +311,7 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
     canvas.width = w;
     canvas.height = h;
     loaded.current = true;
-    draw();
+    drawCanvas();
   };
 
   const pick = (capture) => {
@@ -65,13 +319,18 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
     input.type = 'file';
     input.accept = 'image/*';
     if (capture) input.capture = 'environment';
+    input.style.display = 'none';
+    document.body.appendChild(input);
     input.onchange = (e) => {
       const f = e.target.files[0];
+      document.body.removeChild(input);
       if (!f) return;
       if (f.size > 20 * 1024 * 1024) { setError('Photo must be under 20 MB.'); return; }
       loaded.current = false;
       setImgSrc(URL.createObjectURL(f));
-      setStickers([]);
+      setObjects([]);
+      setSelectedId(null);
+      selectedIdRef.current = null;
       setError('');
     };
     input.click();
@@ -80,19 +339,50 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
   const addSticker = (emoji) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const pad = 0.13;
-    const x = (pad + Math.random() * (1 - 2 * pad)) * canvas.width;
-    const y = (pad + Math.random() * (1 - 2 * pad)) * canvas.height;
-    setStickers(prev => [...prev, { emoji, x, y }]);
+    const size = Math.round(Math.min(canvas.width, canvas.height) * 0.2);
+    const id = nextId++;
+    setObjects(prev => [...prev, { id, type: 'sticker', emoji, x: canvas.width / 2, y: canvas.height / 2, size }]);
+    setSelectedId(id);
+    selectedIdRef.current = id;
+  };
+
+  const placeText = () => {
+    if (!textInput.trim()) { setShowTextInput(false); return; }
+    const canvas = canvasRef.current;
+    const fontSize = Math.round(Math.min(canvas.width, canvas.height) * 0.09);
+    const pos = textPendingPos || { x: canvas.width * 0.08, y: canvas.height * 0.08 };
+    const id = nextId++;
+    setObjects(prev => [...prev, { id, type: 'text', text: textInput.trim(), x: pos.x, y: pos.y, fontSize, color: textColor, fontFamily: textFont }]);
+    setSelectedId(id);
+    selectedIdRef.current = id;
+    setTextInput('');
+    setShowTextInput(false);
+  };
+
+  const undo = () => {
+    setObjects(prev => prev.slice(0, -1));
+    setSelectedId(null);
+    selectedIdRef.current = null;
+  };
+
+  const deleteSelected = () => {
+    setObjects(prev => prev.filter(o => o.id !== selectedId));
+    setSelectedId(null);
+    selectedIdRef.current = null;
   };
 
   const upload = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    setSelectedId(null);
+    selectedIdRef.current = null;
+    await new Promise(r => requestAnimationFrame(r));
+    drawCanvas();
+    await new Promise(r => setTimeout(r, 80));
     setUploading(true);
     setError('');
     try {
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
       const res = await fetch(`${API_URL}/api/events/${eventId}/photos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -108,7 +398,7 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
     }
   };
 
-  // ── Success screen ───────────────────────────────────────────────────────────
+  // ── Success ───────────────────────────────────────────────────────────────
   if (done) return (
     <div style={overlay}>
       <div style={sheet}>
@@ -119,10 +409,10 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
             Your photo is now in the event gallery.
           </p>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginBottom: 28, lineHeight: 1.5 }}>
-            The couple and organizer can see all photos immediately. After the event, they can share a gallery link with guests.
+            The couple and organizer can see it immediately. After the event, they can share a gallery link with guests.
           </p>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={() => { setDone(false); setImgSrc(null); setStickers([]); }} style={bStyle('rgba(255,255,255,0.08)', '#fff', '1px solid rgba(255,255,255,0.15)')}>
+            <button onClick={() => { setDone(false); setImgSrc(null); setObjects([]); }} style={bStyle('rgba(255,255,255,0.08)', '#fff', '1px solid rgba(255,255,255,0.15)')}>
               Share Another
             </button>
             <button onClick={onClose} style={bStyle('#d4a843', '#0a0a0a')}>Done</button>
@@ -132,7 +422,7 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
     </div>
   );
 
-  // ── Picker (no image yet) ────────────────────────────────────────────────────
+  // ── Picker ────────────────────────────────────────────────────────────────
   if (!imgSrc) return (
     <div style={overlay}>
       <div style={sheet}>
@@ -151,67 +441,159 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
     </div>
   );
 
-  // ── Sticker editor ───────────────────────────────────────────────────────────
+  // ── Editor ────────────────────────────────────────────────────────────────
   return (
     <div style={overlay}>
-      <div style={sheet}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <button onClick={() => { setImgSrc(null); setStickers([]); }} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: 14, cursor: 'pointer', fontWeight: 700 }}>← Retake</button>
-          <h2 style={{ color: '#fff', fontWeight: 800, fontSize: 16 }}>Add Stickers</h2>
+      <div style={{ ...sheet, padding: '14px 0 44px' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, padding: '0 16px' }}>
+          <button onClick={() => { setImgSrc(null); setObjects([]); setSelectedId(null); }} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: 14, cursor: 'pointer', fontWeight: 700 }}>← Retake</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {objects.length > 0 && (
+              <button onClick={undo} style={{ background: 'rgba(255,255,255,0.07)', border: 'none', color: '#94a3b8', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>↩ Undo</button>
+            )}
+            {selectedId !== null && (
+              <button onClick={deleteSelected} style={{ background: 'rgba(239,68,68,0.12)', border: 'none', color: '#ef4444', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>🗑 Delete</button>
+            )}
+          </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 24, cursor: 'pointer', lineHeight: 1 }}>×</button>
         </div>
 
         {/* Canvas */}
-        <div style={{ borderRadius: 14, overflow: 'hidden', marginBottom: 14, background: '#000' }}>
-          <canvas ref={canvasRef} style={{ width: '100%', display: 'block' }} />
+        <div style={{ position: 'relative', background: '#000', touchAction: 'none', userSelect: 'none' }}>
+          <canvas ref={canvasRef} style={{ width: '100%', display: 'block', touchAction: 'none', cursor: tool === 'draw' ? 'crosshair' : 'default' }} />
           <img ref={imgRef} src={imgSrc} onLoad={onImgLoad} style={{ display: 'none' }} />
+          {tool === 'text' && !showTextInput && (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+              <div style={{ background: 'rgba(0,0,0,0.6)', borderRadius: 10, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 700 }}>
+                Tap photo to place text
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Sticker tray */}
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-              Tap to add stickers
-            </p>
-            {stickers.length > 0 && (
-              <button onClick={() => setStickers([])} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: 12, cursor: 'pointer', fontWeight: 700 }}>
-                Clear all ({stickers.length})
-              </button>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6, scrollbarWidth: 'none' }}>
-            {STICKERS.map(s => (
-              <button
-                key={s.emoji}
-                onClick={() => addSticker(s.emoji)}
-                style={{
-                  flexShrink: 0, fontSize: 26,
-                  background: 'rgba(255,255,255,0.07)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  borderRadius: 10, padding: '7px 10px', cursor: 'pointer',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-                }}
-              >
-                <span>{s.emoji}</span>
-                <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>{s.label}</span>
-              </button>
-            ))}
-          </div>
+        {/* Tool tabs */}
+        <div style={{ display: 'flex', margin: '12px 16px 0', background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: 3 }}>
+          {[{ id: 'sticker', label: '😄 Stickers' }, { id: 'draw', label: '✏️ Draw' }, { id: 'text', label: 'T Text' }].map(t => (
+            <button key={t.id} onClick={() => { setTool(t.id); setSelectedId(null); selectedIdRef.current = null; }} style={{
+              flex: 1, padding: '8px 4px', borderRadius: 8, border: 'none', cursor: 'pointer',
+              background: tool === t.id ? '#d4a843' : 'transparent',
+              color: tool === t.id ? '#0a0a0a' : 'rgba(255,255,255,0.5)',
+              fontWeight: 700, fontSize: 13, transition: 'all 0.15s',
+            }}>{t.label}</button>
+          ))}
         </div>
 
-        {error && <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 10 }}>{error}</p>}
+        {/* Tool panels */}
+        <div style={{ padding: '10px 16px 0' }}>
+          {tool === 'sticker' && (
+            <>
+              <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+                Tap to add · Drag to move · Pinch to resize
+              </p>
+              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6, scrollbarWidth: 'none' }}>
+                {STICKERS.map(s => (
+                  <button key={s.emoji} onClick={() => addSticker(s.emoji)} style={{
+                    flexShrink: 0, fontSize: 28,
+                    background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: 10, padding: '8px 10px', cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+                  }}>
+                    <span>{s.emoji}</span>
+                    <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>{s.label}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
 
-        <button onClick={upload} disabled={uploading} style={bStyle('#d4a843', '#0a0a0a')}>
-          {uploading ? 'Sharing...' : '🥂 Share with the Party!'}
-        </button>
+          {tool === 'draw' && (
+            <>
+              <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>Color</p>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+                {COLORS.map(c => (
+                  <button key={c} onClick={() => { setDrawColor(c); drawColorRef.current = c; }} style={{
+                    width: 32, height: 32, borderRadius: '50%', background: c, flexShrink: 0,
+                    border: drawColor === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.2)', cursor: 'pointer',
+                  }} />
+                ))}
+              </div>
+              <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>Brush Size</p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[{ label: 'Fine', size: 5 }, { label: 'Medium', size: 12 }, { label: 'Thick', size: 24 }, { label: 'Marker', size: 44 }].map(b => (
+                  <button key={b.label} onClick={() => { setDrawSize(b.size); drawSizeRef.current = b.size; }} style={{
+                    padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 12,
+                    background: drawSize === b.size ? '#d4a843' : 'rgba(255,255,255,0.08)',
+                    color: drawSize === b.size ? '#0a0a0a' : '#94a3b8',
+                  }}>{b.label}</button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {tool === 'text' && (
+            <>
+              <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>Text Color</p>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+                {COLORS.map(c => (
+                  <button key={c} onClick={() => setTextColor(c)} style={{
+                    width: 32, height: 32, borderRadius: '50%', background: c, flexShrink: 0,
+                    border: textColor === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.2)', cursor: 'pointer',
+                  }} />
+                ))}
+              </div>
+              <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>Font</p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {FONTS.map(f => (
+                  <button key={f.value} onClick={() => setTextFont(f.value)} style={{
+                    padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13,
+                    fontFamily: f.value,
+                    background: textFont === f.value ? '#d4a843' : 'rgba(255,255,255,0.08)',
+                    color: textFont === f.value ? '#0a0a0a' : '#94a3b8',
+                  }}>{f.label}</button>
+                ))}
+              </div>
+              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, marginTop: 10 }}>Tap the photo above to place your text · Drag to move it</p>
+            </>
+          )}
+        </div>
+
+        {error && <p style={{ color: '#ef4444', fontSize: 13, margin: '10px 16px 0' }}>{error}</p>}
+
+        <div style={{ padding: '14px 16px 0' }}>
+          <button onClick={upload} disabled={uploading} style={bStyle('#d4a843', '#0a0a0a')}>
+            {uploading ? 'Sharing...' : '🥂 Share with the Party!'}
+          </button>
+        </div>
       </div>
+
+      {/* Text input overlay */}
+      {showTextInput && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div style={{ background: '#1a0f35', border: '1px solid rgba(212,168,67,0.3)', borderRadius: '20px 20px 0 0', padding: '20px 20px 48px', width: '100%', maxWidth: 480 }}>
+            <h3 style={{ color: '#fff', fontWeight: 800, fontSize: 16, marginBottom: 12 }}>Add Text</h3>
+            <input
+              autoFocus
+              value={textInput}
+              onChange={e => setTextInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && placeText()}
+              placeholder="Type something..."
+              style={{ width: '100%', padding: '12px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 16, fontFamily: textFont, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }}
+            />
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setShowTextInput(false)} style={bStyle('rgba(255,255,255,0.08)', '#fff', '1px solid rgba(255,255,255,0.15)')}>Cancel</button>
+              <button onClick={placeText} disabled={!textInput.trim()} style={bStyle('#d4a843', '#0a0a0a')}>Add to Photo</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 const overlay = {
   position: 'fixed', inset: 0, zIndex: 100,
-  background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(8px)',
+  background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(8px)',
   display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
 };
 
@@ -219,14 +601,13 @@ const sheet = {
   background: 'rgba(14,6,32,0.98)',
   borderTop: '1px solid rgba(212,168,67,0.3)',
   borderRadius: '24px 24px 0 0',
-  padding: '22px 20px 44px',
   width: '100%', maxWidth: 480,
-  maxHeight: '92vh', overflowY: 'auto',
+  maxHeight: '96vh', overflowY: 'auto',
 };
 
 function bStyle(bg, color, border = 'none') {
   return {
-    padding: '15px', borderRadius: 12, background: bg, color, border,
+    padding: '14px', borderRadius: 12, background: bg, color, border,
     fontSize: 15, fontWeight: 700, cursor: 'pointer', width: '100%',
     transition: 'opacity 0.15s',
   };
