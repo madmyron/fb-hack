@@ -7,6 +7,7 @@ export default function CustomerView() {
   const { eventId } = useParams();
   const [searchParams] = useSearchParams();
   const [event, setEvent] = useState(null);
+  const [notFound, setNotFound] = useState(false);
   const [menu, setMenu] = useState([]);
   const [screen, setScreen] = useState('welcome');
   const [guestName, setGuestName] = useState('');
@@ -23,11 +24,20 @@ export default function CustomerView() {
       fetch(`${API_URL}/api/events/${eventId}`).then(r => r.json()),
       fetch(`${API_URL}/api/events/${eventId}/menu`).then(r => r.json()),
     ]).then(([ev, mn]) => {
+      if (ev.error) { setNotFound(true); return; }
       setEvent(ev);
       setMenu(mn);
       if (mn.length) setActiveCategory(mn[0].id);
-    }).catch(() => {});
+    }).catch(() => setNotFound(true));
   }, [eventId]);
+
+  if (notFound) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, padding: 32, position: 'relative', zIndex: 1, textAlign: 'center' }}>
+      <div style={{ fontSize: 48 }}>🔗</div>
+      <h2 style={{ color: '#d4a843', fontWeight: 900, fontSize: 22 }}>Event Not Found</h2>
+      <p style={{ color: '#64748b', fontSize: 15, maxWidth: 300 }}>This link may have expired. Please scan your table QR code again or ask the organizer for the correct link.</p>
+    </div>
+  );
 
   if (!event) return (
     <div className="ev-loading"><div className="ev-spinner" /></div>
@@ -109,8 +119,9 @@ export default function CustomerView() {
           See the Drink Menu →
         </button>
         {event.barType === 'open' && (
-          <p style={{ color: 'rgba(30,20,0,0.45)', fontSize: 13, marginTop: 12 }}>Open bar — drinks are on the house 🎉</p>
+          <p style={{ color: 'rgba(30,20,0,0.45)', fontSize: 13, marginTop: 10 }}>Open bar — drinks are on the house 🎉</p>
         )}
+        <p style={{ color: 'rgba(30,20,0,0.4)', fontSize: 13, marginTop: 6 }}>📷 Share photos from inside the menu</p>
       </div>
     </div>
   );
