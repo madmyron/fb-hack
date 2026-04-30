@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_URL } from '../../config';
 
 const ICONS = [
   { e: '🍺', d: '0s' }, { e: '🍹', d: '0.6s' }, { e: '🥂', d: '1.2s' }, { e: '🍔', d: '0.3s' },
@@ -10,12 +11,21 @@ export default function LocationEntry({ onConfirm }) {
   const [type, setType] = useState('table');
   const [number, setNumber] = useState('');
   const [saved, setSaved] = useState(null);
+  const [venueName, setVenueName] = useState('The Tap Room');
+  const [venueTagline, setVenueTagline] = useState('Order food & drinks from your seat. No waiting. No flagging.');
 
   useEffect(() => {
     try {
       const s = localStorage.getItem('taproom_loc');
       if (s) setSaved(JSON.parse(s));
     } catch {}
+    fetch(`${API_URL}/api/config`)
+      .then(r => r.json())
+      .then(cfg => {
+        if (cfg.venueName) setVenueName(cfg.venueName);
+        if (cfg.venueTagline) setVenueTagline(cfg.venueTagline);
+      })
+      .catch(() => {});
   }, []);
 
   const confirm = (loc) => {
@@ -44,8 +54,8 @@ export default function LocationEntry({ onConfirm }) {
 
         <div className="welcome-panel">
           <span className="venue-badge">✦ Est. Good Times ✦</span>
-          <h1 className="venue-title">The Tap Room</h1>
-          <p className="venue-sub">Order food & drinks from your seat.<br />No waiting. No flagging.</p>
+          <h1 className="venue-title">{venueName}</h1>
+          <p className="venue-sub">{venueTagline}</p>
 
           {saved ? (
             <>

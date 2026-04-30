@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import '../operations.css';
+import { API_URL } from '../config';
 import SalesStats from '../components/dashboard/SalesStats';
 import ServerTable from '../components/dashboard/ServerTable';
 import VenueStats from '../components/dashboard/VenueStats';
@@ -23,7 +24,7 @@ const INITIAL_SERVERS = [
   { id: 4, name: 'Tyler Brown', sales: 2600, tips: 480, orders: 78 },
 ];
 
-function PinLogin({ onLogin }) {
+function PinLogin({ onLogin, venueName }) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
 
@@ -47,7 +48,7 @@ function PinLogin({ onLogin }) {
   return (
     <div className="pin-gate">
       <div className="pin-card">
-        <p className="pin-title">The Tap Room</p>
+        <p className="pin-title">{venueName}</p>
         <p className="pin-subtitle">Enter your manager PIN</p>
         <div className="pin-dots">
           {[0, 1, 2, 3].map(i => (
@@ -74,8 +75,16 @@ export default function ManagerDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [newServerName, setNewServerName] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [venueName, setVenueName] = useState('The Tap Room');
 
-  if (!manager) return <PinLogin onLogin={setManager} />;
+  useEffect(() => {
+    fetch(`${API_URL}/api/config`)
+      .then(r => r.json())
+      .then(cfg => { if (cfg.venueName) setVenueName(cfg.venueName); })
+      .catch(() => {});
+  }, []);
+
+  if (!manager) return <PinLogin onLogin={setManager} venueName={venueName} />;
 
   const addServer = () => {
     if (!newServerName.trim()) return;
@@ -91,7 +100,7 @@ export default function ManagerDashboard() {
   return (
     <div className="dashboard">
       <div className="dashboard-header">
-        <h1>The Tap Room — Manager</h1>
+        <h1>{venueName} — Manager</h1>
         <div className="manager-header-right">
           <div className="dashboard-tabs">
             {tabs.map(tab => (

@@ -5,6 +5,7 @@ const cors = require('cors');
 const menuRoutes = require('./routes/menu');
 const orderRoutes = require('./routes/orders');
 const promoRoutes = require('./routes/promos');
+const configRoutes = require('./routes/config');
 
 const app = express();
 const server = http.createServer(app);
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orderRoutes(io));
 app.use('/api/promos', promoRoutes);
+app.use('/api/config', configRoutes);
 
 io.on('connection', () => {});
 
