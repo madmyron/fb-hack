@@ -1,5 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const { createClient } = require('@supabase/supabase-js');
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+);
 
 const DEFAULT_MENU = [
   {
@@ -40,162 +46,214 @@ const DEFAULT_MENU = [
   },
 ];
 
-const events = new Map();
-
-const makeEvent = (data) => ({
-  id: `evt-${Date.now()}`,
-  name: data.name || 'Special Event',
-  greeting: data.greeting || `Welcome to ${data.name || 'our special event'}!`,
-  subgreeting: data.subgreeting || 'Order drinks and they\'ll be brought right to you.',
-  photoUrl: data.photoUrl || '',
-  eventType: data.eventType || 'wedding',
-  barType: data.barType || 'open',
-  tableCount: parseInt(data.tableCount) || 10,
-  seatsPerTable: parseInt(data.seatsPerTable) || 10,
-  date: data.date || '',
-  managerPin: data.managerPin || '0000',
-  status: 'active',
-  menu: JSON.parse(JSON.stringify(DEFAULT_MENU)),
-  eightySixed: [],
-  orders: [],
-  photos: [],
-  galleryOpen: false,
-  createdAt: new Date().toISOString(),
+const toEvent = (e) => ({
+  id: e.id,
+  name: e.name,
+  greeting: e.greeting,
+  subgreeting: e.subgreeting,
+  photoUrl: e.photo_url,
+  eventType: e.event_type,
+  barType: e.bar_type,
+  tableCount: e.table_count,
+  seatsPerTable: e.seats_per_table,
+  date: e.date,
+  managerPin: e.manager_pin,
+  status: e.status,
+  menu: e.menu,
+  eightySixed: e.eighty_sixed,
+  galleryOpen: e.gallery_open,
+  createdAt: e.created_at,
+  orderCount: e.order_count || 0,
 });
 
-router.get('/', (req, res) => {
-  res.json([...events.values()].map(e => ({
-    id: e.id, name: e.name, date: e.date, eventType: e.eventType,
-    barType: e.barType, tableCount: e.tableCount, seatsPerTable: e.seatsPerTable,
-    status: e.status, orderCount: e.orders.length, createdAt: e.createdAt,
-    greeting: e.greeting, photoUrl: e.photoUrl, managerPin: e.managerPin,
-  })));
+const toOrder = (o) => ({
+  id: o.id,
+  guestName: o.guest_name,
+  table: o.table_num,
+  seat: o.seat,
+  items: o.items,
+  total: o.total,
+  barType: o.bar_type,
+  status: o.status,
+  createdAt: o.created_at,
 });
 
-router.post('/', (req, res) => {
-  const event = makeEvent(req.body);
-  events.set(event.id, event);
-  res.json(event);
+const toPhoto = (p) => ({
+  id: p.id,
+  url: p.url,
+  guestName: p.guest_name,
+  table: p.table_num,
+  uploadedAt: p.uploaded_at,
 });
 
-router.get('/:id', (req, res) => {
-  const event = events.get(req.params.id);
-  if (!event) return res.status(404).json({ error: 'Not found' });
-  const { orders, ...rest } = event;
-  res.json({ ...rest, orderCount: orders.length });
+// ── Events ───────────────────────────────────────────────────────────────────
+
+router.get('/', async (req, res) => {
+  const { data, error } = await supabase.from('titi_events').select('*').order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error: error.message });
+  const { data: orders } = await supabase.from('titi_orders').select('event_id');
+  const countMap = {};
+  (orders || []).forEach(o => { countMap[o.event_id] = (countMap[o.event_id] || 0) + 1; });
+  res.json((data || []).map(e => ({ ...toEvent(e), orderCount: countMap[e.id] || 0 })));
 });
 
-router.put('/:id', (req, res) => {
-  const event = events.get(req.params.id);
-  if (!event) return res.status(404).json({ error: 'Not found' });
-  const updated = { ...event, ...req.body, id: event.id, orders: event.orders, menu: event.menu, eightySixed: event.eightySixed };
-  events.set(event.id, updated);
-  res.json(updated);
+router.post('/', async (req, res) => {
+  const d = req.body;
+  const record = {
+    id: `evt-${Date.now()}`,
+    name: d.name || 'Special Event',
+    greeting: d.greeting || `Welcome to ${d.name || 'our special event'}!`,
+    subgreeting: d.subgreeting || "Order drinks and they'll be brought right to you.",
+    photo_url: d.photoUrl || '',
+    event_type: d.eventType || 'wedding',
+    bar_type: d.barType || 'open',
+    table_count: parseInt(d.tableCount) || 10,
+    seats_per_table: parseInt(d.seatsPerTable) || 10,
+    date: d.date || '',
+    manager_pin: d.managerPin || '0000',
+    status: 'active',
+    menu: JSON.parse(JSON.stringify(DEFAULT_MENU)),
+    eighty_sixed: [],
+    gallery_open: false,
+  };
+  const { data, error } = await supabase.from('titi_events').insert(record).select().single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(toEvent(data));
 });
 
-router.delete('/:id', (req, res) => {
-  events.delete(req.params.id);
+router.get('/:id', async (req, res) => {
+  const { data, error } = await supabase.from('titi_events').select('*').eq('id', req.params.id).single();
+  if (error || !data) return res.status(404).json({ error: 'Not found' });
+  const { data: orders } = await supabase.from('titi_orders').select('id').eq('event_id', req.params.id);
+  res.json({ ...toEvent(data), orderCount: (orders || []).length });
+});
+
+router.put('/:id', async (req, res) => {
+  const d = req.body;
+  const updates = {};
+  if (d.name !== undefined) updates.name = d.name;
+  if (d.greeting !== undefined) updates.greeting = d.greeting;
+  if (d.subgreeting !== undefined) updates.subgreeting = d.subgreeting;
+  if (d.photoUrl !== undefined) updates.photo_url = d.photoUrl;
+  if (d.eventType !== undefined) updates.event_type = d.eventType;
+  if (d.barType !== undefined) updates.bar_type = d.barType;
+  if (d.tableCount !== undefined) updates.table_count = parseInt(d.tableCount);
+  if (d.seatsPerTable !== undefined) updates.seats_per_table = parseInt(d.seatsPerTable);
+  if (d.date !== undefined) updates.date = d.date;
+  if (d.managerPin !== undefined) updates.manager_pin = d.managerPin;
+  if (d.status !== undefined) updates.status = d.status;
+  const { data, error } = await supabase.from('titi_events').update(updates).eq('id', req.params.id).select().single();
+  if (error || !data) return res.status(404).json({ error: 'Not found' });
+  res.json(toEvent(data));
+});
+
+router.delete('/:id', async (req, res) => {
+  await supabase.from('titi_events').delete().eq('id', req.params.id);
   res.json({ success: true });
 });
 
-router.get('/:id/menu', (req, res) => {
-  const event = events.get(req.params.id);
-  if (!event) return res.status(404).json({ error: 'Not found' });
-  res.json(event.menu.map(cat => ({
+// ── Menu ─────────────────────────────────────────────────────────────────────
+
+router.get('/:id/menu', async (req, res) => {
+  const { data, error } = await supabase.from('titi_events').select('menu, eighty_sixed').eq('id', req.params.id).single();
+  if (error || !data) return res.status(404).json({ error: 'Not found' });
+  res.json(data.menu.map(cat => ({
     ...cat,
-    items: cat.items.map(item => ({ ...item, soldOut: event.eightySixed.includes(item.id) })),
+    items: cat.items.map(item => ({ ...item, soldOut: data.eighty_sixed.includes(item.id) })),
   })));
 });
 
-router.put('/:id/menu', (req, res) => {
-  const event = events.get(req.params.id);
-  if (!event) return res.status(404).json({ error: 'Not found' });
-  event.menu = req.body.menu || event.menu;
-  res.json(event.menu);
+router.put('/:id/menu', async (req, res) => {
+  const { data, error } = await supabase.from('titi_events').update({ menu: req.body.menu }).eq('id', req.params.id).select('menu').single();
+  if (error || !data) return res.status(404).json({ error: 'Not found' });
+  res.json(data.menu);
 });
 
-router.get('/:id/orders', (req, res) => {
-  const event = events.get(req.params.id);
-  if (!event) return res.status(404).json({ error: 'Not found' });
-  res.json(event.orders);
+// ── Orders ───────────────────────────────────────────────────────────────────
+
+router.get('/:id/orders', async (req, res) => {
+  const { data, error } = await supabase.from('titi_orders').select('*').eq('event_id', req.params.id).order('created_at');
+  if (error) return res.status(500).json({ error: error.message });
+  res.json((data || []).map(toOrder));
 });
 
-router.post('/:id/orders', (req, res) => {
-  const event = events.get(req.params.id);
-  if (!event) return res.status(404).json({ error: 'Not found' });
-  const order = { id: `o-${Date.now()}`, ...req.body, status: 'pending', createdAt: new Date().toISOString() };
-  event.orders.push(order);
-  res.json(order);
+router.post('/:id/orders', async (req, res) => {
+  const { guestName, table, seat, items, total, barType } = req.body;
+  const record = {
+    id: `o-${Date.now()}`,
+    event_id: req.params.id,
+    guest_name: guestName || 'Guest',
+    table_num: table || '',
+    seat: seat || '',
+    items: items || [],
+    total: total || 0,
+    bar_type: barType || 'open',
+    status: 'pending',
+  };
+  const { data, error } = await supabase.from('titi_orders').insert(record).select().single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(toOrder(data));
 });
 
-router.patch('/:id/orders/:orderId', (req, res) => {
-  const event = events.get(req.params.id);
-  if (!event) return res.status(404).json({ error: 'Not found' });
-  const order = event.orders.find(o => o.id === req.params.orderId);
-  if (!order) return res.status(404).json({ error: 'Order not found' });
-  order.status = req.body.status || order.status;
-  res.json(order);
+router.patch('/:id/orders/:orderId', async (req, res) => {
+  const { data, error } = await supabase.from('titi_orders').update({ status: req.body.status }).eq('id', req.params.orderId).select().single();
+  if (error || !data) return res.status(404).json({ error: 'Order not found' });
+  res.json(toOrder(data));
 });
 
-router.get('/:id/eightysix', (req, res) => {
-  const event = events.get(req.params.id);
-  if (!event) return res.status(404).json({ error: 'Not found' });
-  res.json(event.eightySixed);
+// ── 86 ───────────────────────────────────────────────────────────────────────
+
+router.get('/:id/eightysix', async (req, res) => {
+  const { data, error } = await supabase.from('titi_events').select('eighty_sixed').eq('id', req.params.id).single();
+  if (error || !data) return res.status(404).json({ error: 'Not found' });
+  res.json(data.eighty_sixed);
 });
 
-router.post('/:id/eightysix', (req, res) => {
-  const event = events.get(req.params.id);
-  if (!event) return res.status(404).json({ error: 'Not found' });
-  const { itemId } = req.body;
-  const idx = event.eightySixed.indexOf(itemId);
-  if (idx >= 0) event.eightySixed.splice(idx, 1);
-  else event.eightySixed.push(itemId);
-  res.json(event.eightySixed);
+router.post('/:id/eightysix', async (req, res) => {
+  const { data: ev, error } = await supabase.from('titi_events').select('eighty_sixed').eq('id', req.params.id).single();
+  if (error || !ev) return res.status(404).json({ error: 'Not found' });
+  const list = [...ev.eighty_sixed];
+  const idx = list.indexOf(req.body.itemId);
+  if (idx >= 0) list.splice(idx, 1); else list.push(req.body.itemId);
+  await supabase.from('titi_events').update({ eighty_sixed: list }).eq('id', req.params.id);
+  res.json(list);
 });
 
 // ── Photos ───────────────────────────────────────────────────────────────────
 
-router.get('/:id/photos', (req, res) => {
-  const event = events.get(req.params.id);
-  if (!event) return res.status(404).json({ error: 'Not found' });
-  res.json({ photos: event.photos, galleryOpen: event.galleryOpen });
+router.get('/:id/photos', async (req, res) => {
+  const [{ data: ev }, { data: photos }] = await Promise.all([
+    supabase.from('titi_events').select('gallery_open').eq('id', req.params.id).single(),
+    supabase.from('titi_photos').select('*').eq('event_id', req.params.id).order('uploaded_at'),
+  ]);
+  if (!ev) return res.status(404).json({ error: 'Not found' });
+  res.json({ photos: (photos || []).map(toPhoto), galleryOpen: ev.gallery_open });
 });
 
-router.post('/:id/photos', (req, res) => {
-  const event = events.get(req.params.id);
-  if (!event) return res.status(404).json({ error: 'Not found' });
+router.post('/:id/photos', async (req, res) => {
   const { url, guestName, table } = req.body;
   if (!url) return res.status(400).json({ error: 'url required' });
-  const photo = {
-    id: `ph-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+  const record = {
+    id: `ph-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    event_id: req.params.id,
     url,
-    guestName: guestName || 'Guest',
-    table: table || '',
-    uploadedAt: new Date().toISOString(),
+    guest_name: guestName || 'Guest',
+    table_num: table || '',
   };
-  event.photos.push(photo);
-  res.json(photo);
+  const { data, error } = await supabase.from('titi_photos').insert(record).select().single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(toPhoto(data));
 });
 
-router.delete('/:id/photos/:photoId', (req, res) => {
-  const event = events.get(req.params.id);
-  if (!event) return res.status(404).json({ error: 'Not found' });
-  event.photos = event.photos.filter(p => p.id !== req.params.photoId);
+router.delete('/:id/photos/:photoId', async (req, res) => {
+  await supabase.from('titi_photos').delete().eq('id', req.params.photoId);
   res.json({ success: true });
 });
 
-router.patch('/:id/gallery', (req, res) => {
-  const event = events.get(req.params.id);
-  if (!event) return res.status(404).json({ error: 'Not found' });
-  event.galleryOpen = !!req.body.open;
-  res.json({ galleryOpen: event.galleryOpen });
-});
-
-// ── Upload URL (R2 presigned — wired after bucket enabled) ───────────────────
-
-router.post('/:id/photos/upload-url', async (req, res) => {
-  // Placeholder until R2 credentials are configured
-  res.status(503).json({ error: 'Storage not configured yet' });
+router.patch('/:id/gallery', async (req, res) => {
+  const { data, error } = await supabase.from('titi_events').update({ gallery_open: !!req.body.open }).eq('id', req.params.id).select('gallery_open').single();
+  if (error || !data) return res.status(404).json({ error: 'Not found' });
+  res.json({ galleryOpen: data.gallery_open });
 });
 
 module.exports = router;
