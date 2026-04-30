@@ -69,16 +69,20 @@ export default function CustomerView() {
   };
 
   const bgStyle = event.photoUrl
-    ? { backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.55), rgba(0,0,0,0.78)), url(${event.photoUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+    ? { backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.08), rgba(0,0,0,0.22)), url(${event.photoUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+    : { background: 'linear-gradient(135deg, #fdf4e7 0%, #fce8c2 50%, #f5d5a0 100%)' };
+
+  const menuBgStyle = event.photoUrl
+    ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.52), rgba(0,0,0,0.62)), url(${event.photoUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
     : {};
 
   if (ordered) return (
     <div className="ev-screen" style={bgStyle}>
       <div className="ev-confirm-card">
         <div style={{ fontSize: 56, marginBottom: 16 }}>🥂</div>
-        <h2 style={{ color: '#d4a843', fontSize: 24, fontWeight: 900, marginBottom: 8 }}>Order Placed!</h2>
-        <p style={{ color: '#e2e8f0', fontSize: 16, marginBottom: 4 }}>We'll bring your drinks right to you, {guestName}.</p>
-        {table && <p style={{ color: '#94a3b8', fontSize: 14 }}>Table {table}{seat ? `, Seat ${seat}` : ''}</p>}
+        <h2 style={{ color: '#92600a', fontSize: 24, fontWeight: 900, marginBottom: 8 }}>Order Placed!</h2>
+        <p style={{ color: '#1a0f00', fontSize: 16, marginBottom: 4 }}>We'll bring your drinks right to you, {guestName}.</p>
+        {table && <p style={{ color: 'rgba(30,20,0,0.55)', fontSize: 14 }}>Table {table}{seat ? `, Seat ${seat}` : ''}</p>}
         <button className="ev-btn" style={{ marginTop: 28 }} onClick={() => setOrdered(false)}>
           Order More
         </button>
@@ -103,7 +107,7 @@ export default function CustomerView() {
           See the Drink Menu →
         </button>
         {event.barType === 'open' && (
-          <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13, marginTop: 12 }}>Open bar — drinks are on the house 🎉</p>
+          <p style={{ color: 'rgba(30,20,0,0.45)', fontSize: 13, marginTop: 12 }}>Open bar — drinks are on the house 🎉</p>
         )}
       </div>
     </div>
@@ -111,18 +115,18 @@ export default function CustomerView() {
 
   if (screen === 'cart') {
     return (
-      <div className="ev-menu-screen">
+      <div className="ev-menu-screen" style={menuBgStyle}>
         <div className="ev-menu-header">
           <button className="ev-back-btn" onClick={() => setScreen('menu')}>← Menu</button>
-          <h2 style={{ color: '#e2e8f0', fontWeight: 800, fontSize: 18 }}>Your Order</h2>
+          <h2 style={{ color: '#ffffff', fontWeight: 800, fontSize: 18 }}>Your Order</h2>
           <div />
         </div>
         <div style={{ padding: '0 20px' }}>
           {cart.map(item => (
-            <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #1e293b' }}>
+            <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
               <div>
-                <p style={{ color: '#e2e8f0', fontWeight: 700, fontSize: 15 }}>{item.name}</p>
-                {event.barType !== 'open' && <p style={{ color: '#64748b', fontSize: 13 }}>${item.price.toFixed(2)} each</p>}
+                <p style={{ color: '#ffffff', fontWeight: 700, fontSize: 15 }}>{item.name}</p>
+                {event.barType !== 'open' && <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>${item.price.toFixed(2)} each</p>}
               </div>
               <div className="ev-qty">
                 <button onClick={() => removeFromCart(item.id)}>−</button>
@@ -131,7 +135,7 @@ export default function CustomerView() {
               </div>
             </div>
           ))}
-          {cart.length === 0 && <p style={{ color: '#64748b', padding: '32px 0', textAlign: 'center' }}>Your cart is empty.</p>}
+          {cart.length === 0 && <p style={{ color: 'rgba(255,255,255,0.5)', padding: '32px 0', textAlign: 'center' }}>Your cart is empty.</p>}
           <button className="ev-btn" style={{ marginTop: 24, width: '100%' }} onClick={placeOrder} disabled={submitting || cart.length === 0}>
             {submitting ? 'Placing order...' : `Place Order${event.barType !== 'open' ? ` · $${totalPrice.toFixed(2)}` : ''}`}
           </button>
@@ -143,7 +147,7 @@ export default function CustomerView() {
   // menu screen
   const activeCat = menu.find(c => c.id === activeCategory);
   return (
-    <div className="ev-menu-screen">
+    <div className="ev-menu-screen" style={menuBgStyle}>
       <div className="ev-menu-header">
         <div>
           <p className="ev-menu-event-name">{event.name}</p>
