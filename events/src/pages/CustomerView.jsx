@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { API_URL } from '../config';
 import PhotoUpload from '../components/PhotoUpload.jsx';
+import Camera from '../components/Camera.jsx';
 
 export default function CustomerView() {
   const { eventId } = useParams();
@@ -18,6 +19,7 @@ export default function CustomerView() {
   const [ordered, setOrdered] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
   const [initialImgSrc, setInitialImgSrc] = useState(null);
 
   useEffect(() => {
@@ -116,6 +118,13 @@ export default function CustomerView() {
     ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.52), rgba(0,0,0,0.62)), url(${event.photoUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
     : {};
 
+  const cameraEl = showCamera && (
+    <Camera
+      onCapture={(url) => { setShowCamera(false); setInitialImgSrc(url); setShowPhotoUpload(true); }}
+      onClose={() => setShowCamera(false)}
+    />
+  );
+
   const photoUploadEl = showPhotoUpload && (
     <PhotoUpload
       eventId={eventId}
@@ -183,10 +192,7 @@ export default function CustomerView() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
           <button className="ev-btn" onClick={() => setScreen('menu')}>🍹 Order Drinks</button>
           <div style={{ display: 'flex', gap: 10, width: '100%' }}>
-            <label style={{ flex: 1, padding: '15px', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer', textAlign: 'center', display: 'block' }}>
-              📸 Camera
-              <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handlePhotoFile} />
-            </label>
+            <button onClick={() => setShowCamera(true)} style={{ flex: 1, padding: '15px', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer' }}>📸 Camera</button>
             <label style={{ flex: 1, padding: '15px', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer', textAlign: 'center', display: 'block' }}>
               🖼 Gallery
               <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoFile} />
@@ -198,6 +204,7 @@ export default function CustomerView() {
         </button>
       </div>
       {photoUploadEl}
+      {cameraEl}
     </div>
   );
 
@@ -293,10 +300,7 @@ export default function CustomerView() {
       </div>
 
       <div className="ev-photo-bar">
-        <label className="ev-photo-btn">
-          📸 Camera
-          <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handlePhotoFile} />
-        </label>
+        <button className="ev-photo-btn" onClick={() => setShowCamera(true)}>📸 Camera</button>
         <label className="ev-photo-btn" style={{ marginLeft: 10 }}>
           🖼 Gallery
           <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoFile} />
@@ -304,6 +308,7 @@ export default function CustomerView() {
       </div>
 
       {photoUploadEl}
+      {cameraEl}
     </div>
   );
 }
