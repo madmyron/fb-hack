@@ -21,6 +21,7 @@ export default function CustomerView() {
 
   // Restore saved guest info on load, and re-open photo modal if camera was in progress
   useEffect(() => {
+    if (searchParams.get('demo') === '1') return;
     try {
       const saved = JSON.parse(localStorage.getItem(`titi_${eventId}`) || '{}');
       if (saved.guestName) setGuestName(saved.guestName);
@@ -117,9 +118,9 @@ export default function CustomerView() {
     <div className="ev-screen" style={bgStyle}>
       <div className="ev-confirm-card">
         <div style={{ fontSize: 56, marginBottom: 16 }}>🥂</div>
-        <h2 style={{ color: '#92600a', fontSize: 24, fontWeight: 900, marginBottom: 8 }}>Order Placed!</h2>
-        <p style={{ color: '#1a0f00', fontSize: 16, marginBottom: 4 }}>We'll bring your drinks right to you, {guestName}.</p>
-        {table && <p style={{ color: 'rgba(30,20,0,0.55)', fontSize: 14 }}>Table {table}{seat ? `, Seat ${seat}` : ''}</p>}
+        <h2 style={{ color: '#f0d080', fontSize: 24, fontWeight: 900, marginBottom: 8 }}>Order Placed!</h2>
+        <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 16, marginBottom: 4 }}>We'll bring your drinks right to you, {guestName}.</p>
+        {table && <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14 }}>Table {table}{seat ? `, Seat ${seat}` : ''}</p>}
         <button className="ev-btn" style={{ marginTop: 28 }} onClick={() => setOrdered(false)}>
           Order More
         </button>
@@ -144,9 +145,9 @@ export default function CustomerView() {
           See the Drink Menu →
         </button>
         {event.barType === 'open' && (
-          <p style={{ color: 'rgba(30,20,0,0.45)', fontSize: 13, marginTop: 10 }}>Open bar — drinks are on the house 🎉</p>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 10 }}>Open bar — drinks are on the house 🎉</p>
         )}
-        <p style={{ color: 'rgba(30,20,0,0.4)', fontSize: 13, marginTop: 6 }}>📷 Share photos from inside the menu</p>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 6 }}>📷 Share photos from inside the menu</p>
       </div>
     </div>
   );
@@ -212,7 +213,7 @@ export default function CustomerView() {
         ))}
       </div>
 
-      <div className="ev-items" style={{ paddingBottom: 80 }}>
+      <div className="ev-items">
         {activeCat?.items.map(item => {
           const qty = cart.find(c => c.id === item.id)?.qty || 0;
           if (item.soldOut) return (
@@ -247,27 +248,18 @@ export default function CustomerView() {
         })}
       </div>
 
-      {/* Floating camera button */}
-      <button
-        onClick={() => setShowPhotoUpload(true)}
-        style={{
-          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-          background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(212,168,67,0.5)', borderRadius: 40,
-          padding: '12px 22px', color: '#d4a843', fontWeight: 800, fontSize: 15,
-          cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-          boxShadow: '0 4px 24px rgba(0,0,0,0.4)', zIndex: 20,
-          whiteSpace: 'nowrap',
-        }}
-      >
-        📷 Share a Photo
-      </button>
+      <div className="ev-photo-bar">
+        <button className="ev-photo-btn" onClick={() => setShowPhotoUpload(true)}>
+          📷 Take a Pic
+        </button>
+      </div>
 
       {showPhotoUpload && (
         <PhotoUpload
           eventId={eventId}
           guestName={guestName}
           table={table}
+          photoUrl={event.photoUrl}
           onClose={() => setShowPhotoUpload(false)}
           onUploaded={() => {}}
         />

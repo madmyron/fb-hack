@@ -39,7 +39,7 @@ const FONTS = [
 
 let nextId = 1;
 
-export default function PhotoUpload({ eventId, guestName, table, onClose, onUploaded }) {
+export default function PhotoUpload({ eventId, guestName, table, photoUrl, onClose, onUploaded }) {
   const [imgSrc, setImgSrc] = useState(null);
   const [objects, setObjects] = useState([]);
   const [tool, setTool] = useState('sticker');
@@ -320,25 +320,17 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
     drawCanvas();
   };
 
-  const pick = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.style.display = 'none';
-    document.body.appendChild(input);
-    input.onchange = (e) => {
-      const f = e.target.files[0];
-      document.body.removeChild(input);
-      if (!f) return;
-      if (f.size > 20 * 1024 * 1024) { setError('Photo must be under 20 MB.'); return; }
-      loaded.current = false;
-      setImgSrc(URL.createObjectURL(f));
-      setObjects([]);
-      setSelectedId(null);
-      selectedIdRef.current = null;
-      setError('');
-    };
-    input.click();
+  const handleFile = (e) => {
+    const f = e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    if (f.size > 20 * 1024 * 1024) { setError('Photo must be under 20 MB.'); return; }
+    loaded.current = false;
+    setImgSrc(URL.createObjectURL(f));
+    setObjects([]);
+    setSelectedId(null);
+    selectedIdRef.current = null;
+    setError('');
   };
 
   const addSticker = (emoji) => {
@@ -465,8 +457,9 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
   const selectedObj = objects.find(o => o.id === selectedId);
 
   if (done) return (
-    <div style={overlay}>
-      <div style={sheet}>
+    <div style={{ ...overlayBase(photoUrl), alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }} />
+      <div style={{ ...sheet, position: 'relative', zIndex: 1, borderRadius: 24, maxWidth: 360, margin: '0 24px' }}>
         <div style={{ textAlign: 'center', padding: '12px 0 8px' }}>
           <div style={{ fontSize: 64, marginBottom: 14 }}>🎉</div>
           <h2 style={{ color: '#d4a843', fontWeight: 900, fontSize: 22, marginBottom: 8 }}>Photo Shared!</h2>
@@ -482,23 +475,31 @@ export default function PhotoUpload({ eventId, guestName, table, onClose, onUplo
   );
 
   if (!imgSrc) return (
-    <div style={overlay}>
-      <div style={sheet}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ color: '#fff', fontWeight: 800, fontSize: 18 }}>Share a Photo</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 26, cursor: 'pointer', lineHeight: 1 }}>×</button>
-        </div>
+    <div style={{ ...overlayBase(photoUrl), alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }} />
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 360, padding: '0 24px', textAlign: 'center' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: -48, right: 24, background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', fontSize: 30, cursor: 'pointer', lineHeight: 1 }}>×</button>
+        <div style={{ fontSize: 52, marginBottom: 12 }}>💍</div>
+        <h2 style={{ color: '#fff', fontWeight: 900, fontSize: 22, marginBottom: 6 }}>Share a Moment</h2>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, marginBottom: 28, lineHeight: 1.5 }}>Capture the love — add stickers & text, then share with everyone at the party.</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <button onClick={pick} style={bStyle('#d4a843', '#0a0a0a')}>📷 Add a Photo</button>
-          <button disabled style={{ ...bStyle('rgba(255,255,255,0.04)', 'rgba(255,255,255,0.22)', '1px solid rgba(255,255,255,0.07)'), cursor: 'not-allowed' }}>🎬 Video — Coming Soon</button>
+          <label style={{ ...bStyle('#d4a843', '#0a0a0a'), display: 'block', cursor: 'pointer' }}>
+            📸 Open Camera
+            <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleFile} />
+          </label>
+          <label style={{ ...bStyle('rgba(255,255,255,0.12)', '#fff', '1px solid rgba(255,255,255,0.2)'), display: 'block', cursor: 'pointer' }}>
+            🖼 Choose from Gallery
+            <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
+          </label>
         </div>
       </div>
     </div>
   );
 
   return (
-    <div style={overlay}>
-      <div style={{ ...sheet, padding: '14px 0 44px' }}>
+    <div style={{ ...overlayBase(photoUrl), alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }} />
+      <div style={{ ...sheet, padding: '14px 0 44px', position: 'relative', zIndex: 1 }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, padding: '0 16px' }}>
           <button onClick={() => { setImgSrc(null); setObjects([]); setSelectedId(null); }} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: 14, cursor: 'pointer', fontWeight: 700 }}>← Retake</button>
@@ -638,11 +639,14 @@ function ctrlBtn({ label, onClick }) {
   );
 }
 
-const overlay = {
+const overlayBase = (photoUrl) => ({
   position: 'fixed', inset: 0, zIndex: 100,
-  background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(8px)',
-  display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-};
+  backgroundImage: photoUrl ? `url(${photoUrl})` : undefined,
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+  background: photoUrl ? undefined : '#0a0418',
+  display: 'flex',
+});
 
 const sheet = {
   background: 'rgba(14,6,32,0.98)',

@@ -102,9 +102,9 @@ body {
 }
 
 .ev-welcome-panel {
-  background: rgba(255, 251, 243, 0.88);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   border: 1px solid rgba(212, 168, 67, 0.35);
   border-radius: 28px;
   padding: 44px 36px;
@@ -112,14 +112,14 @@ body {
   max-width: 420px;
   text-align: center;
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.18),
-    0 2px 8px rgba(212, 168, 67, 0.12);
+    0 8px 40px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(212, 168, 67, 0.1);
 }
 
 .ev-badge {
   display: inline-block;
-  background: linear-gradient(135deg, rgba(212, 168, 67, 0.25), rgba(212, 168, 67, 0.12));
-  color: #92600a;
+  background: linear-gradient(135deg, rgba(212, 168, 67, 0.3), rgba(212, 168, 67, 0.15));
+  color: #f0d080;
   padding: 6px 18px;
   border-radius: 20px;
   font-size: 12px;
@@ -127,22 +127,24 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.8px;
   margin-bottom: 20px;
-  border: 1px solid rgba(212, 168, 67, 0.3);
+  border: 1px solid rgba(212, 168, 67, 0.4);
 }
 
 .ev-title {
   font-size: 27px;
   font-weight: 900;
-  color: #1a0f00;
+  color: #ffffff;
   line-height: 1.2;
   margin-bottom: 10px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
 .ev-sub {
   font-size: 15px;
-  color: rgba(30, 20, 0, 0.6);
+  color: rgba(255, 255, 255, 0.85);
   margin-bottom: 28px;
   line-height: 1.5;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
 }
 
 .ev-form-group {
@@ -153,18 +155,18 @@ body {
 }
 
 .ev-input {
-  background: rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 12px;
   padding: 14px 16px;
   font-size: 15px;
-  color: #1a0f00;
+  color: #ffffff;
   outline: none;
   width: 100%;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.ev-input::placeholder { color: rgba(0, 0, 0, 0.35); }
+.ev-input::placeholder { color: rgba(255, 255, 255, 0.45); }
 .ev-input:focus {
   border-color: #d4a843;
   box-shadow: 0 0 0 3px rgba(212, 168, 67, 0.15);
@@ -199,27 +201,28 @@ body {
 /* ─── Confirm card ────────────────────────────────────────── */
 
 .ev-confirm-card {
-  background: rgba(255, 251, 243, 0.88);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   border: 1px solid rgba(212, 168, 67, 0.35);
   border-radius: 28px;
   padding: 52px 36px;
   text-align: center;
   max-width: 380px;
   width: 100%;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 /* ─── Menu Screen ─────────────────────────────────────────── */
 
 .ev-menu-screen {
-  min-height: 100vh;
+  height: 100dvh;
   background: rgba(8, 1, 20, 0.97);
   display: flex;
   flex-direction: column;
   position: relative;
   z-index: 1;
+  overscroll-behavior: none;
 }
 
 .ev-menu-header {
@@ -310,6 +313,32 @@ body {
   flex: 1;
   padding: 12px 16px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ev-photo-bar {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px 20px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.6);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ev-photo-btn {
+  background: rgba(212, 168, 67, 0.12);
+  border: 1.5px solid rgba(212, 168, 67, 0.55);
+  border-radius: 40px;
+  padding: 14px 32px;
+  color: #d4a843;
+  font-weight: 800;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-block;
 }
 
 .ev-item {

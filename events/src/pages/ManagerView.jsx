@@ -2,6 +2,21 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { API_URL, SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
 
+const LOVE_QUOTES = [
+  { text: 'Order drinks and celebrate love — cheers to the happy couple!', label: 'Fun & Festive' },
+  { text: 'To love and be loved is to feel the sun from both sides.', label: 'David Viscott' },
+  { text: 'You are my today and all of my tomorrows.', label: 'Leo Christopher' },
+  { text: 'In all the world, there is no heart for me like yours.', label: 'Maya Angelou' },
+  { text: 'The best thing to hold onto in life is each other.', label: 'Audrey Hepburn' },
+  { text: 'I choose you. And I\'ll choose you over and over and over.', label: 'Unknown' },
+  { text: 'Grow old with me; the best is yet to be.', label: 'Robert Browning' },
+  { text: 'Whatever our souls are made of, his and hers are the same.', label: 'Emily Brontë' },
+  { text: 'I love you not only for what you are, but for what I am when I am with you.', label: 'Roy Croft' },
+  { text: 'Love is composed of a single soul inhabiting two bodies.', label: 'Aristotle' },
+  { text: 'Two are better than one — for if either falls, the other will lift up their companion.', label: 'Ecclesiastes 4:9' },
+  { text: 'He is my sun, my moon, and all my stars.', label: 'E.E. Cummings' },
+];
+
 export default function ManagerView() {
   const { eventId } = useParams();
   const [event, setEvent] = useState(null);
@@ -14,9 +29,14 @@ export default function ManagerView() {
   const [photos, setPhotos] = useState([]);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [tab, setTab] = useState('orders');
+  const [selectedQuote, setSelectedQuote] = useState('');
+  const [quoteSaved, setQuoteSaved] = useState(false);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/events/${eventId}`).then(r => r.json()).then(setEvent).catch(() => {});
+    fetch(`${API_URL}/api/events/${eventId}`).then(r => r.json()).then(ev => {
+      setEvent(ev);
+      if (ev.subgreeting) setSelectedQuote(ev.subgreeting);
+    }).catch(() => {});
   }, [eventId]);
 
   useEffect(() => {
@@ -77,6 +97,17 @@ export default function ManagerView() {
     setEvent(ev => ({ ...ev, photoUrl: publicUrl }));
   };
 
+  const saveSubgreeting = async () => {
+    await fetch(`${API_URL}/api/events/${eventId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subgreeting: selectedQuote }),
+    });
+    setEvent(ev => ({ ...ev, subgreeting: selectedQuote }));
+    setQuoteSaved(true);
+    setTimeout(() => setQuoteSaved(false), 2000);
+  };
+
   const toggle86 = async (itemId) => {
     const res = await fetch(`${API_URL}/api/events/${eventId}/eightysix`, {
       method: 'POST',
@@ -121,13 +152,13 @@ export default function ManagerView() {
           <span style={{ color: '#64748b', fontSize: 12 }}>Manager</span>
         </div>
         <div style={{ display: 'flex', gap: 6, flexShrink: 0, paddingTop: 10, paddingBottom: 10 }}>
-          {['orders', '86', 'photos'].map(t => (
+          {['orders', '86', 'photos', 'settings'].map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: '6px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 12,
               background: tab === t ? '#d4a843' : '#1f2937', color: tab === t ? '#0a0a0a' : '#64748b',
               whiteSpace: 'nowrap',
             }}>
-              {t === 'orders' ? `Orders${pending > 0 ? ` (${pending})` : ''}` : t === '86' ? '86' : `Photos${photos.length > 0 ? ` (${photos.length})` : ''}`}
+              {t === 'orders' ? `Orders${pending > 0 ? ` (${pending})` : ''}` : t === '86' ? '86' : t === 'photos' ? `Photos${photos.length > 0 ? ` (${photos.length})` : ''}` : '⚙'}
             </button>
           ))}
           <button onClick={() => setAuthed(false)} style={{ padding: '6px 10px', borderRadius: 8, border: 'none', background: '#1f2937', color: '#64748b', cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap' }}>Lock</button>
@@ -206,6 +237,57 @@ export default function ManagerView() {
                 })}
               </tbody>
             </table>
+            </div>
+          </div>
+        )}
+
+        {tab === 'settings' && (
+          <div>
+            <div style={{ background: '#111827', border: '1px solid #1f2937', borderRadius: 12, padding: 20, marginBottom: 16 }}>
+              <p style={{ color: '#e2e8f0', fontWeight: 800, fontSize: 15, marginBottom: 4 }}>Welcome Message</p>
+              <p style={{ color: '#64748b', fontSize: 13, marginBottom: 20 }}>Pick the line that shows under "Welcome to {event.name}" on the guest screen.</p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+                {LOVE_QUOTES.map((q, i) => {
+                  const active = selectedQuote === q.text;
+                  return (
+                    <button key={i} onClick={() => setSelectedQuote(q.text)} style={{
+                      textAlign: 'left', padding: '14px 16px', borderRadius: 10, cursor: 'pointer',
+                      border: `1px solid ${active ? '#d4a843' : '#1f2937'}`,
+                      background: active ? 'rgba(212,168,67,0.1)' : 'rgba(255,255,255,0.02)',
+                      transition: 'all 0.15s',
+                    }}>
+                      <p style={{ color: active ? '#d4a843' : '#e2e8f0', fontSize: 14, fontWeight: 600, lineHeight: 1.4, marginBottom: 4 }}>"{q.text}"</p>
+                      <p style={{ color: '#64748b', fontSize: 12 }}>— {q.label}</p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <p style={{ color: '#64748b', fontSize: 12, marginBottom: 8 }}>Or write your own:</p>
+              <textarea
+                value={LOVE_QUOTES.some(q => q.text === selectedQuote) ? '' : selectedQuote}
+                onChange={e => setSelectedQuote(e.target.value)}
+                placeholder="Type a custom message..."
+                rows={3}
+                style={{
+                  width: '100%', boxSizing: 'border-box', background: '#0d0920', border: '1px solid #1f2937',
+                  borderRadius: 10, padding: '12px 14px', color: '#e2e8f0', fontSize: 14,
+                  resize: 'vertical', outline: 'none', fontFamily: 'inherit',
+                }}
+              />
+
+              <button
+                onClick={saveSubgreeting}
+                disabled={!selectedQuote.trim()}
+                style={{
+                  marginTop: 16, width: '100%', padding: '13px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                  background: quoteSaved ? '#22c55e' : '#d4a843', color: '#0a0a0a', fontWeight: 800, fontSize: 15,
+                  transition: 'background 0.3s',
+                }}
+              >
+                {quoteSaved ? '✓ Saved!' : 'Save Message'}
+              </button>
             </div>
           </div>
         )}

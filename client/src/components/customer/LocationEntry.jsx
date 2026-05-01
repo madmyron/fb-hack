@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { API_URL } from '../../config';
 
 const ICONS = [
@@ -7,6 +8,8 @@ const ICONS = [
 ];
 
 export default function LocationEntry({ onConfirm }) {
+  const [searchParams] = useSearchParams();
+  const isDemo = searchParams.get('demo') === '1';
   const [screen, setScreen] = useState('welcome');
   const [type, setType] = useState('table');
   const [number, setNumber] = useState('');
@@ -15,10 +18,12 @@ export default function LocationEntry({ onConfirm }) {
   const [venueTagline, setVenueTagline] = useState('Order food & drinks from your seat. No waiting. No flagging.');
 
   useEffect(() => {
-    try {
-      const s = localStorage.getItem('taproom_loc');
-      if (s) setSaved(JSON.parse(s));
-    } catch {}
+    if (!isDemo) {
+      try {
+        const s = localStorage.getItem('taproom_loc');
+        if (s) setSaved(JSON.parse(s));
+      } catch {}
+    }
     fetch(`${API_URL}/api/config`)
       .then(r => r.json())
       .then(cfg => {

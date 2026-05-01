@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 
-const RESTAURANT_DEMO = '/rest';
-const EVENTS_DEMO = 'https://events.tapittapit.com/evt-1777584573234';
+const RESTAURANT_DEMO = '/rest?demo=1';
+const EVENTS_DEMO = 'https://events.tapittapit.com/evt-1777584573234?demo=1';
 
 export default function Home() {
   const navigate = useNavigate();
