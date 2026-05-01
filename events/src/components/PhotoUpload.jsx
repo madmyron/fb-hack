@@ -407,6 +407,26 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, initi
     selectedIdRef.current = null;
   };
 
+  const saveToGallery = async () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    setSelectedId(null);
+    selectedIdRef.current = null;
+    await new Promise(r => requestAnimationFrame(r));
+    drawCanvas();
+    await new Promise(r => setTimeout(r, 80));
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+    const file = new File([blob], 'party-photo.jpg', { type: 'image/jpeg' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Party Photo' });
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'party-photo.jpg'; a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
   const upload = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -503,40 +523,42 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, initi
   );
 
   return (
-    <div style={{ ...overlayBase(photoUrl), alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }} />
-      <div style={{ ...sheet, padding: '14px 0 44px', position: 'relative', zIndex: 1 }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, padding: '0 16px' }}>
-          <button onClick={() => { setImgSrc(null); setObjects([]); setSelectedId(null); }} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: 14, cursor: 'pointer', fontWeight: 700 }}>← Retake</button>
-          <button onClick={undo} disabled={objects.length === 0} style={{ background: objects.length > 0 ? 'rgba(255,255,255,0.07)' : 'transparent', border: 'none', color: objects.length > 0 ? '#94a3b8' : 'rgba(255,255,255,0.2)', borderRadius: 8, padding: '5px 12px', cursor: objects.length > 0 ? 'pointer' : 'default', fontSize: 13, fontWeight: 700 }}>↩ Undo</button>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 24, cursor: 'pointer', lineHeight: 1 }}>×</button>
-        </div>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', flexDirection: 'column', background: 'rgba(14,6,32,0.98)' }}>
 
-        {/* Canvas */}
-        <div style={{ position: 'relative', background: '#000', touchAction: 'none', userSelect: 'none' }}>
-          <canvas ref={canvasRef} style={{ width: '100%', display: 'block', touchAction: 'none', cursor: tool === 'draw' ? 'crosshair' : 'default' }} />
-          <img ref={imgRef} src={imgSrc} onLoad={onImgLoad} style={{ display: 'none' }} />
-          {tool === 'text' && !showTextInput && (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-              <div style={{ background: 'rgba(0,0,0,0.6)', borderRadius: 10, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 700 }}>Tap photo to place text</div>
-            </div>
-          )}
-        </div>
+      {/* Header — always visible */}
+      <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <button onClick={() => { setImgSrc(null); setObjects([]); setSelectedId(null); }} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: 14, cursor: 'pointer', fontWeight: 700 }}>← Retake</button>
+        <button onClick={undo} disabled={objects.length === 0} style={{ background: objects.length > 0 ? 'rgba(255,255,255,0.07)' : 'transparent', border: 'none', color: objects.length > 0 ? '#94a3b8' : 'rgba(255,255,255,0.2)', borderRadius: 8, padding: '5px 12px', cursor: objects.length > 0 ? 'pointer' : 'default', fontSize: 13, fontWeight: 700 }}>↩ Undo</button>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 24, cursor: 'pointer', lineHeight: 1 }}>×</button>
+      </div>
 
-        {/* Selected object toolbar */}
-        {selectedObj && selectedObj.type !== 'path' && (
-          <div style={{ display: 'flex', gap: 6, padding: '10px 16px', justifyContent: 'center', background: 'rgba(212,168,67,0.08)', borderTop: '1px solid rgba(212,168,67,0.15)', borderBottom: '1px solid rgba(212,168,67,0.15)' }}>
-            <ctrlBtn label="↺" title="Rotate left" onClick={() => rotateSelected(-15)} />
-            <ctrlBtn label="↻" title="Rotate right" onClick={() => rotateSelected(15)} />
-            <ctrlBtn label="−" title="Smaller" onClick={() => resizeSelected(0.82)} />
-            <ctrlBtn label="+" title="Bigger" onClick={() => resizeSelected(1.22)} />
-            <button onClick={deleteSelected} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13, background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>🗑 Delete</button>
+      {/* Canvas — always visible, never scrolls away */}
+      <div style={{ flexShrink: 0, position: 'relative', background: '#000', touchAction: 'none', userSelect: 'none', maxHeight: '45vh', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <canvas ref={canvasRef} style={{ maxWidth: '100%', maxHeight: '45vh', display: 'block', touchAction: 'none', cursor: tool === 'draw' ? 'crosshair' : 'default' }} />
+        <img ref={imgRef} src={imgSrc} onLoad={onImgLoad} style={{ display: 'none' }} />
+        {tool === 'text' && !showTextInput && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+            <div style={{ background: 'rgba(0,0,0,0.6)', borderRadius: 10, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 700 }}>Tap photo to place text</div>
           </div>
         )}
+      </div>
 
-        {/* Quick phrases — always visible */}
-        <div style={{ padding: '10px 16px 4px' }}>
+      {/* Selected object toolbar — always visible when active */}
+      {selectedObj && selectedObj.type !== 'path' && (
+        <div style={{ flexShrink: 0, display: 'flex', gap: 6, padding: '8px 16px', justifyContent: 'center', background: 'rgba(212,168,67,0.08)', borderTop: '1px solid rgba(212,168,67,0.15)', borderBottom: '1px solid rgba(212,168,67,0.15)' }}>
+          <ctrlBtn label="↺" onClick={() => rotateSelected(-15)} />
+          <ctrlBtn label="↻" onClick={() => rotateSelected(15)} />
+          <ctrlBtn label="−" onClick={() => resizeSelected(0.82)} />
+          <ctrlBtn label="+" onClick={() => resizeSelected(1.22)} />
+          <button onClick={deleteSelected} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13, background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>🗑 Delete</button>
+        </div>
+      )}
+
+      {/* Tools — this section scrolls, photo stays above */}
+      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+
+        {/* Quick phrases */}
+        <div style={{ flexShrink: 0, padding: '10px 16px 4px' }}>
           <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>Quick Captions</p>
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
             {PHRASES.map(p => (
@@ -551,7 +573,7 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, initi
         </div>
 
         {/* Tool tabs */}
-        <div style={{ display: 'flex', margin: '10px 16px 0', background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: 3 }}>
+        <div style={{ flexShrink: 0, display: 'flex', margin: '10px 16px 0', background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: 3 }}>
           {[{ id: 'sticker', label: '😄 Stickers' }, { id: 'draw', label: '✏️ Draw' }, { id: 'text', label: 'Aa Text' }].map(t => (
             <button key={t.id} onClick={() => { setTool(t.id); setSelectedId(null); selectedIdRef.current = null; }} style={{
               flex: 1, padding: '8px 4px', borderRadius: 8, border: 'none', cursor: 'pointer',
@@ -567,7 +589,7 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, initi
           {tool === 'sticker' && (
             <>
               <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
-                Tap to add · Drag to move · Pinch or use +/− to resize
+                Tap to add · Drag to move · Pinch to resize
               </p>
               <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6, scrollbarWidth: 'none' }}>
                 {STICKERS.map(s => (
@@ -616,15 +638,18 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, initi
                   <button key={f.value} onClick={() => setTextFont(f.value)} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13, fontFamily: f.value, background: textFont === f.value ? '#d4a843' : 'rgba(255,255,255,0.08)', color: textFont === f.value ? '#0a0a0a' : '#94a3b8' }}>{f.label}</button>
                 ))}
               </div>
-              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, marginTop: 4 }}>Tap a phrase above or tap the photo to type your own · Then drag, resize, or rotate it</p>
+              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, marginTop: 4 }}>Tap a phrase above or tap the photo to type your own</p>
             </>
           )}
         </div>
 
         {error && <p style={{ color: '#ef4444', fontSize: 13, margin: '10px 16px 0' }}>{error}</p>}
-        <div style={{ padding: '14px 16px 0' }}>
+        <div style={{ padding: '14px 16px', paddingBottom: 'max(14px, env(safe-area-inset-bottom))', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button onClick={upload} disabled={uploading} style={bStyle('#d4a843', '#0a0a0a')}>
             {uploading ? 'Sharing...' : '🥂 Share with the Party!'}
+          </button>
+          <button onClick={saveToGallery} style={bStyle('rgba(255,255,255,0.08)', '#fff', '1px solid rgba(255,255,255,0.15)')}>
+            💾 Save to My Gallery
           </button>
         </div>
       </div>
