@@ -18,9 +18,8 @@ export default function CustomerView() {
   const [ordered, setOrdered] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
-  const [restoredFromCamera, setRestoredFromCamera] = useState(false);
+  const [initialImgSrc, setInitialImgSrc] = useState(null);
 
-  // Restore saved guest info on load, and re-open photo modal if camera was in progress
   useEffect(() => {
     if (searchParams.get('demo') === '1') return;
     try {
@@ -28,18 +27,12 @@ export default function CustomerView() {
       if (saved.guestName) setGuestName(saved.guestName);
       if (saved.table && !searchParams.get('table')) setTable(saved.table);
       if (saved.seat && !searchParams.get('seat')) setSeat(saved.seat);
-      if (saved.screen === 'menu' && saved.guestName) {
-        setScreen('menu');
-        if (sessionStorage.getItem('titi_cam')) {
-          sessionStorage.removeItem('titi_cam');
-          setShowPhotoUpload(true);
-          setRestoredFromCamera(true);
-        }
+      if ((saved.screen === 'hub' || saved.screen === 'menu') && saved.guestName) {
+        setScreen(saved.screen);
       }
     } catch {}
   }, [eventId]);
 
-  // Save guest info whenever it changes
   useEffect(() => {
     if (!guestName) return;
     try {
@@ -60,16 +53,24 @@ export default function CustomerView() {
   }, [eventId]);
 
   if (notFound) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, padding: 32, position: 'relative', zIndex: 1, textAlign: 'center' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, padding: 32, textAlign: 'center' }}>
       <div style={{ fontSize: 48 }}>🔗</div>
       <h2 style={{ color: '#d4a843', fontWeight: 900, fontSize: 22 }}>Event Not Found</h2>
       <p style={{ color: '#64748b', fontSize: 15, maxWidth: 300 }}>This link may have expired. Please scan your table QR code again or ask the organizer for the correct link.</p>
     </div>
   );
 
-  if (!event) return (
-    <div className="ev-loading"><div className="ev-spinner" /></div>
-  );
+  if (!event) return <div className="ev-loading"><div className="ev-spinner" /></div>;
+
+  const handlePhotoFile = (e) => {
+    const f = e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    const url = URL.createObjectURL(f);
+    setInitialImgSrc(url);
+    setShowPhotoUpload(true);
+    setTimeout(() => URL.revokeObjectURL(url), 15000);
+  };
 
   const addToCart = (item) => setCart(prev => {
     const ex = prev.find(c => c.id === item.id);
@@ -105,7 +106,6 @@ export default function CustomerView() {
     setSubmitting(false);
     setOrdered(true);
     setCart([]);
-    setScreen('welcome');
   };
 
   const bgStyle = event.photoUrl
@@ -116,20 +116,39 @@ export default function CustomerView() {
     ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.52), rgba(0,0,0,0.62)), url(${event.photoUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
     : {};
 
+  const photoUploadEl = showPhotoUpload && (
+    <PhotoUpload
+      eventId={eventId}
+      guestName={guestName}
+      table={table}
+      photoUrl={event.photoUrl}
+      initialImgSrc={initialImgSrc}
+      onClose={() => { setShowPhotoUpload(false); setInitialImgSrc(null); }}
+      onUploaded={() => {}}
+    />
+  );
+
+  // ── Order confirmed ──────────────────────────────────────────
   if (ordered) return (
     <div className="ev-screen" style={bgStyle}>
       <div className="ev-confirm-card">
         <div style={{ fontSize: 56, marginBottom: 16 }}>🥂</div>
         <h2 style={{ color: '#f0d080', fontSize: 24, fontWeight: 900, marginBottom: 8 }}>Order Placed!</h2>
         <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 16, marginBottom: 4 }}>We'll bring your drinks right to you, {guestName}.</p>
-        {table && <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14 }}>Table {table}{seat ? `, Seat ${seat}` : ''}</p>}
-        <button className="ev-btn" style={{ marginTop: 28 }} onClick={() => setOrdered(false)}>
-          Order More
-        </button>
+        {table && <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14, marginBottom: 24 }}>Table {table}{seat ? `, Seat ${seat}` : ''}</p>}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button className="ev-btn" onClick={() => { setOrdered(false); setScreen('hub'); }}>
+            🎉 Back to Party
+          </button>
+          <button onClick={() => { setOrdered(false); setScreen('menu'); }} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.25)', color: 'rgba(255,255,255,0.7)', borderRadius: 12, padding: '12px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+            Order More
+          </button>
+        </div>
       </div>
     </div>
   );
 
+  // ── Welcome ──────────────────────────────────────────────────
   if (screen === 'welcome') return (
     <div className="ev-screen" style={bgStyle}>
       <div className="ev-welcome-panel">
@@ -143,49 +162,76 @@ export default function CustomerView() {
             <input className="ev-input" placeholder="Seat #" value={seat} onChange={e => setSeat(e.target.value)} style={{ flex: 1 }} />
           </div>
         </div>
-        <button className="ev-btn" disabled={!guestName.trim()} onClick={() => setScreen('menu')}>
-          See the Drink Menu →
+        <button className="ev-btn" disabled={!guestName.trim()} onClick={() => setScreen('hub')}>
+          Let's Party →
         </button>
         {event.barType === 'open' && (
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 10 }}>Open bar — drinks are on the house 🎉</p>
         )}
-        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 6 }}>📷 Share photos from inside the menu</p>
       </div>
     </div>
   );
 
-  if (screen === 'cart') {
-    return (
-      <div className="ev-menu-screen" style={menuBgStyle}>
-        <div className="ev-menu-header">
-          <button className="ev-back-btn" onClick={() => setScreen('menu')}>← Menu</button>
-          <h2 style={{ color: '#ffffff', fontWeight: 800, fontSize: 18 }}>Your Order</h2>
-          <div />
+  // ── Hub ──────────────────────────────────────────────────────
+  if (screen === 'hub') return (
+    <div className="ev-screen" style={bgStyle}>
+      <div className="ev-welcome-panel" style={{ gap: 0 }}>
+        <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{event.name}</p>
+        <h1 className="ev-title" style={{ fontSize: 22, marginBottom: 6 }}>Hi, {guestName}! 🥂</h1>
+        {table && <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 16 }}>Table {table}{seat ? ` · Seat ${seat}` : ''}</p>}
+        {event.subgreeting && <p className="ev-sub" style={{ marginBottom: 24, fontSize: 13 }}>"{event.subgreeting}"</p>}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
+          <button className="ev-btn" onClick={() => setScreen('menu')}>🍹 Order Drinks</button>
+          <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+            <label style={{ flex: 1, padding: '15px', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer', textAlign: 'center', display: 'block' }}>
+              📸 Camera
+              <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handlePhotoFile} />
+            </label>
+            <label style={{ flex: 1, padding: '15px', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer', textAlign: 'center', display: 'block' }}>
+              🖼 Gallery
+              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoFile} />
+            </label>
+          </div>
         </div>
-        <div style={{ padding: '0 20px' }}>
-          {cart.map(item => (
-            <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
-              <div>
-                <p style={{ color: '#ffffff', fontWeight: 700, fontSize: 15 }}>{item.name}</p>
-                {event.barType !== 'open' && <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>${item.price.toFixed(2)} each</p>}
-              </div>
-              <div className="ev-qty">
-                <button onClick={() => removeFromCart(item.id)}>−</button>
-                <span>{item.qty}</span>
-                <button onClick={() => addToCart(item)}>+</button>
-              </div>
-            </div>
-          ))}
-          {cart.length === 0 && <p style={{ color: 'rgba(255,255,255,0.5)', padding: '32px 0', textAlign: 'center' }}>Your cart is empty.</p>}
-          <button className="ev-btn" style={{ marginTop: 24, width: '100%' }} onClick={placeOrder} disabled={submitting || cart.length === 0}>
-            {submitting ? 'Placing order...' : `Place Order${event.barType !== 'open' ? ` · $${totalPrice.toFixed(2)}` : ''}`}
-          </button>
-        </div>
+        <button onClick={() => setScreen('welcome')} style={{ marginTop: 20, background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer' }}>
+          Change Name / Seat
+        </button>
       </div>
-    );
-  }
+      {photoUploadEl}
+    </div>
+  );
 
-  // menu screen
+  // ── Cart ─────────────────────────────────────────────────────
+  if (screen === 'cart') return (
+    <div className="ev-menu-screen" style={menuBgStyle}>
+      <div className="ev-menu-header">
+        <button className="ev-back-btn" onClick={() => setScreen('menu')}>← Menu</button>
+        <h2 style={{ color: '#ffffff', fontWeight: 800, fontSize: 18 }}>Your Order</h2>
+        <div />
+      </div>
+      <div style={{ padding: '0 20px', overflowY: 'auto', flex: 1 }}>
+        {cart.map(item => (
+          <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
+            <div>
+              <p style={{ color: '#ffffff', fontWeight: 700, fontSize: 15 }}>{item.name}</p>
+              {event.barType !== 'open' && <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>${item.price.toFixed(2)} each</p>}
+            </div>
+            <div className="ev-qty">
+              <button onClick={() => removeFromCart(item.id)}>−</button>
+              <span>{item.qty}</span>
+              <button onClick={() => addToCart(item)}>+</button>
+            </div>
+          </div>
+        ))}
+        {cart.length === 0 && <p style={{ color: 'rgba(255,255,255,0.5)', padding: '32px 0', textAlign: 'center' }}>Your cart is empty.</p>}
+        <button className="ev-btn" style={{ marginTop: 24, width: '100%' }} onClick={placeOrder} disabled={submitting || cart.length === 0}>
+          {submitting ? 'Placing order...' : `Place Order${event.barType !== 'open' ? ` · $${totalPrice.toFixed(2)}` : ''}`}
+        </button>
+      </div>
+    </div>
+  );
+
+  // ── Menu ─────────────────────────────────────────────────────
   const activeCat = menu.find(c => c.id === activeCategory);
   return (
     <div className="ev-menu-screen" style={menuBgStyle}>
@@ -199,17 +245,13 @@ export default function CustomerView() {
             🛒 {totalItems} {event.barType !== 'open' ? `· $${totalPrice.toFixed(2)}` : ''}
           </button>
         ) : (
-          <button className="ev-back-btn" onClick={() => setScreen('welcome')}>← Back</button>
+          <button className="ev-back-btn" onClick={() => setScreen('hub')}>← Back</button>
         )}
       </div>
 
       <div className="ev-category-tabs">
         {menu.map(cat => (
-          <button
-            key={cat.id}
-            className={`ev-tab ${activeCategory === cat.id ? 'active' : ''}`}
-            onClick={() => setActiveCategory(cat.id)}
-          >
+          <button key={cat.id} className={`ev-tab ${activeCategory === cat.id ? 'active' : ''}`} onClick={() => setActiveCategory(cat.id)}>
             {cat.category}
           </button>
         ))}
@@ -251,22 +293,17 @@ export default function CustomerView() {
       </div>
 
       <div className="ev-photo-bar">
-        <button className="ev-photo-btn" onClick={() => setShowPhotoUpload(true)}>
-          📷 Take a Pic
-        </button>
+        <label className="ev-photo-btn">
+          📸 Camera
+          <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handlePhotoFile} />
+        </label>
+        <label className="ev-photo-btn" style={{ marginLeft: 10 }}>
+          🖼 Gallery
+          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoFile} />
+        </label>
       </div>
 
-      {showPhotoUpload && (
-        <PhotoUpload
-          eventId={eventId}
-          guestName={guestName}
-          table={table}
-          photoUrl={event.photoUrl}
-          restoredFromCamera={restoredFromCamera}
-          onClose={() => { setShowPhotoUpload(false); setRestoredFromCamera(false); }}
-          onUploaded={() => {}}
-        />
-      )}
+      {photoUploadEl}
     </div>
   );
 }

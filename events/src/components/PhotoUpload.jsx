@@ -39,8 +39,8 @@ const FONTS = [
 
 let nextId = 1;
 
-export default function PhotoUpload({ eventId, guestName, table, photoUrl, restoredFromCamera, onClose, onUploaded }) {
-  const [imgSrc, setImgSrc] = useState(null);
+export default function PhotoUpload({ eventId, guestName, table, photoUrl, initialImgSrc, onClose, onUploaded }) {
+  const [imgSrc, setImgSrc] = useState(initialImgSrc || null);
   const [objects, setObjects] = useState([]);
   const [tool, setTool] = useState('sticker');
   const [drawColor, setDrawColor] = useState('#ff3030');
@@ -65,6 +65,15 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, resto
   const drawSizeRef = useRef(12);
   const touchState = useRef({ dragging: false, objId: null, lastX: 0, lastY: 0, pinching: false, startDist: 0, startSize: 0 });
   const currentPathRef = useRef(null);
+
+  useEffect(() => {
+    if (initialImgSrc) {
+      loaded.current = false;
+      setObjects([]);
+      setSelectedId(null);
+      selectedIdRef.current = null;
+    }
+  }, [initialImgSrc]);
 
   useEffect(() => { objectsRef.current = objects; }, [objects]);
   useEffect(() => { selectedIdRef.current = selectedId; }, [selectedId]);
@@ -308,7 +317,7 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, resto
     const canvas = canvasRef.current;
     const img = imgRef.current;
     if (!canvas || !img) return;
-    const MAX = 2400;
+    const MAX = 700;
     let w = img.naturalWidth, h = img.naturalHeight;
     if (w > MAX || h > MAX) {
       if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
@@ -326,7 +335,9 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, resto
     if (!f) return;
     if (f.size > 20 * 1024 * 1024) { setError('Photo must be under 20 MB.'); return; }
     loaded.current = false;
-    setImgSrc(URL.createObjectURL(f));
+    const url = URL.createObjectURL(f);
+    setImgSrc(url);
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
     setObjects([]);
     setSelectedId(null);
     selectedIdRef.current = null;
@@ -482,24 +493,11 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, resto
         <button onClick={onClose} style={{ position: 'absolute', top: -48, right: 24, background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', fontSize: 30, cursor: 'pointer', lineHeight: 1 }}>×</button>
         <div style={{ fontSize: 52, marginBottom: 12 }}>💍</div>
         <h2 style={{ color: '#fff', fontWeight: 900, fontSize: 22, marginBottom: 6 }}>Share a Moment</h2>
-        {restoredFromCamera ? (
-          <div style={{ background: 'rgba(212,168,67,0.15)', border: '1px solid rgba(212,168,67,0.4)', borderRadius: 12, padding: '12px 16px', marginBottom: 20 }}>
-            <p style={{ color: '#d4a843', fontWeight: 700, fontSize: 14, marginBottom: 4 }}>📷 Photo saved to your camera roll!</p>
-            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, lineHeight: 1.4 }}>Tap <strong>Choose from Gallery</strong> below and pick the photo you just took to add stickers.</p>
-          </div>
-        ) : (
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, marginBottom: 28, lineHeight: 1.5 }}>Capture the love — add stickers & text, then share with everyone at the party.</p>
-        )}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <label style={{ ...bStyle('#d4a843', '#0a0a0a'), display: 'block', cursor: 'pointer' }} onClick={() => sessionStorage.setItem('titi_cam', '1')}>
-            📸 Take a Photo
-            <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { sessionStorage.removeItem('titi_cam'); handleFile(e); }} />
-          </label>
-          <label style={{ ...bStyle('rgba(255,255,255,0.12)', '#fff', '1px solid rgba(255,255,255,0.2)'), display: 'block', cursor: 'pointer' }}>
-            🖼 Choose from Gallery
-            <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
-          </label>
-        </div>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, marginBottom: 28, lineHeight: 1.5 }}>Capture the love — add stickers & text, then share with everyone at the party.</p>
+        <label style={{ ...bStyle('#d4a843', '#0a0a0a'), display: 'block', cursor: 'pointer' }}>
+          📷 Add a Photo
+          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
+        </label>
       </div>
     </div>
   );

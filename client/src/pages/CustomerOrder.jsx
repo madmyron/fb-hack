@@ -41,6 +41,7 @@ export default function CustomerOrder() {
         <MenuBrowser
           cart={cart}
           cartCount={cartCount}
+          location={location}
           onAdd={addToCart}
           onRemove={removeFromCart}
           onViewCart={() => setStep('cart')}
@@ -50,6 +51,7 @@ export default function CustomerOrder() {
         <CartReview
           cart={cart}
           total={cartTotal}
+          location={location}
           onAdd={addToCart}
           onRemove={removeFromCart}
           onBack={() => setStep('menu')}

@@ -1,9 +1,12 @@
-export default function CartReview({ cart, total, onAdd, onRemove, onBack, onCheckout }) {
+export default function CartReview({ cart, total, location, onAdd, onRemove, onBack, onCheckout }) {
   return (
     <div className="cart-review">
       <div className="page-header">
         <button className="back-btn" onClick={onBack}>← Menu</button>
-        <h2>Your Order</h2>
+        <div style={{ textAlign: 'right' }}>
+          <h2>Your Order</h2>
+          {location && <p style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, marginTop: 2 }}>{location.type === 'table' ? 'Table' : 'Bar Spot'} {location.number}</p>}
+        </div>
       </div>
       <div className="cart-items">
         {cart.map((entry) => (

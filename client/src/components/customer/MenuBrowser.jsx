@@ -18,7 +18,7 @@ const TAB_COLORS = {
   na: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
 };
 
-export default function MenuBrowser({ cart, cartCount, onAdd, onRemove, onViewCart }) {
+export default function MenuBrowser({ cart, cartCount, location, onAdd, onRemove, onViewCart }) {
   const [menu, setMenu] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -58,7 +58,10 @@ export default function MenuBrowser({ cart, cartCount, onAdd, onRemove, onViewCa
   return (
     <div className="menu-browser">
       <div className="menu-header">
-        <h2>Menu</h2>
+        <div>
+          <h2>Menu</h2>
+          {location && <p style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, marginTop: 2 }}>{location.type === 'table' ? 'Table' : 'Bar Spot'} {location.number}</p>}
+        </div>
         {cartCount > 0 && (
           <button className="cart-btn" onClick={onViewCart}>Cart ({cartCount})</button>
         )}
