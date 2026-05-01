@@ -420,20 +420,23 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, initi
     await new Promise(r => setTimeout(r, 80));
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
     const file = new File([blob], 'party-photo.jpg', { type: 'image/jpeg' });
-    setSaveFile(file);
-    setShowSave(true);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      setSaveFile(file);
+      setShowSave(true);
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'party-photo.jpg'; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+    }
   };
 
   const doSave = async () => {
     setShowSave(false);
     try {
       await navigator.share({ files: [saveFile], title: 'Party Photo' });
-    } catch {
-      const url = URL.createObjectURL(saveFile);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'party-photo.jpg'; a.click();
-      URL.revokeObjectURL(url);
-    }
+    } catch {}
   };
 
   const upload = async () => {
