@@ -54,6 +54,8 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, initi
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
+  const [showSave, setShowSave] = useState(false);
+  const saveCanvasRef = useRef(null);
 
   const canvasRef = useRef(null);
   const imgRef = useRef(null);
@@ -415,15 +417,13 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, initi
     await new Promise(r => requestAnimationFrame(r));
     drawCanvas();
     await new Promise(r => setTimeout(r, 80));
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
-    const file = new File([blob], 'party-photo.jpg', { type: 'image/jpeg' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: 'Party Photo' });
-    } else {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'party-photo.jpg'; a.click();
-      URL.revokeObjectURL(url);
+    setShowSave(true);
+    await new Promise(r => setTimeout(r, 120));
+    const sc = saveCanvasRef.current;
+    if (sc) {
+      sc.width = canvas.width;
+      sc.height = canvas.height;
+      sc.getContext('2d').drawImage(canvas, 0, 0);
     }
   };
 
@@ -653,6 +653,14 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, initi
           </button>
         </div>
       </div>
+
+      {showSave && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: '#000', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, padding: 24 }}>
+          <p style={{ color: '#d4a843', fontWeight: 800, fontSize: 16, textAlign: 'center' }}>Hold down on the photo → tap "Save Image"</p>
+          <canvas ref={saveCanvasRef} style={{ maxWidth: '100%', maxHeight: '65vh', borderRadius: 12, display: 'block' }} />
+          <button onClick={() => setShowSave(false)} style={bStyle('rgba(255,255,255,0.12)', '#fff', '1px solid rgba(255,255,255,0.2)')}>Done</button>
+        </div>
+      )}
 
       {showTextInput && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
