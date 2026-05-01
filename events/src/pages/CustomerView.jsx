@@ -18,6 +18,7 @@ export default function CustomerView() {
   const [ordered, setOrdered] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
+  const [restoredFromCamera, setRestoredFromCamera] = useState(false);
 
   // Restore saved guest info on load, and re-open photo modal if camera was in progress
   useEffect(() => {
@@ -32,6 +33,7 @@ export default function CustomerView() {
         if (sessionStorage.getItem('titi_cam')) {
           sessionStorage.removeItem('titi_cam');
           setShowPhotoUpload(true);
+          setRestoredFromCamera(true);
         }
       }
     } catch {}
@@ -260,7 +262,8 @@ export default function CustomerView() {
           guestName={guestName}
           table={table}
           photoUrl={event.photoUrl}
-          onClose={() => setShowPhotoUpload(false)}
+          restoredFromCamera={restoredFromCamera}
+          onClose={() => { setShowPhotoUpload(false); setRestoredFromCamera(false); }}
           onUploaded={() => {}}
         />
       )}

@@ -39,7 +39,7 @@ const FONTS = [
 
 let nextId = 1;
 
-export default function PhotoUpload({ eventId, guestName, table, photoUrl, onClose, onUploaded }) {
+export default function PhotoUpload({ eventId, guestName, table, photoUrl, restoredFromCamera, onClose, onUploaded }) {
   const [imgSrc, setImgSrc] = useState(null);
   const [objects, setObjects] = useState([]);
   const [tool, setTool] = useState('sticker');
@@ -308,7 +308,7 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, onClo
     const canvas = canvasRef.current;
     const img = imgRef.current;
     if (!canvas || !img) return;
-    const MAX = 1200;
+    const MAX = 2400;
     let w = img.naturalWidth, h = img.naturalHeight;
     if (w > MAX || h > MAX) {
       if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
@@ -332,6 +332,7 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, onClo
     selectedIdRef.current = null;
     setError('');
   };
+
 
   const addSticker = (emoji) => {
     const canvas = canvasRef.current;
@@ -481,11 +482,18 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, onClo
         <button onClick={onClose} style={{ position: 'absolute', top: -48, right: 24, background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', fontSize: 30, cursor: 'pointer', lineHeight: 1 }}>×</button>
         <div style={{ fontSize: 52, marginBottom: 12 }}>💍</div>
         <h2 style={{ color: '#fff', fontWeight: 900, fontSize: 22, marginBottom: 6 }}>Share a Moment</h2>
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, marginBottom: 28, lineHeight: 1.5 }}>Capture the love — add stickers & text, then share with everyone at the party.</p>
+        {restoredFromCamera ? (
+          <div style={{ background: 'rgba(212,168,67,0.15)', border: '1px solid rgba(212,168,67,0.4)', borderRadius: 12, padding: '12px 16px', marginBottom: 20 }}>
+            <p style={{ color: '#d4a843', fontWeight: 700, fontSize: 14, marginBottom: 4 }}>📷 Photo saved to your camera roll!</p>
+            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, lineHeight: 1.4 }}>Tap <strong>Choose from Gallery</strong> below and pick the photo you just took to add stickers.</p>
+          </div>
+        ) : (
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, marginBottom: 28, lineHeight: 1.5 }}>Capture the love — add stickers & text, then share with everyone at the party.</p>
+        )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <label style={{ ...bStyle('#d4a843', '#0a0a0a'), display: 'block', cursor: 'pointer' }}>
-            📸 Open Camera
-            <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleFile} />
+          <label style={{ ...bStyle('#d4a843', '#0a0a0a'), display: 'block', cursor: 'pointer' }} onClick={() => sessionStorage.setItem('titi_cam', '1')}>
+            📸 Take a Photo
+            <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { sessionStorage.removeItem('titi_cam'); handleFile(e); }} />
           </label>
           <label style={{ ...bStyle('rgba(255,255,255,0.12)', '#fff', '1px solid rgba(255,255,255,0.2)'), display: 'block', cursor: 'pointer' }}>
             🖼 Choose from Gallery
@@ -529,9 +537,24 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, onClo
           </div>
         )}
 
+        {/* Quick phrases — always visible */}
+        <div style={{ padding: '10px 16px 4px' }}>
+          <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>Quick Captions</p>
+          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+            {PHRASES.map(p => (
+              <button key={p} onClick={() => addPhrase(p)} style={{
+                flexShrink: 0, padding: '7px 14px', borderRadius: 20,
+                border: '1px solid rgba(212,168,67,0.4)',
+                background: 'rgba(212,168,67,0.1)', color: '#d4a843',
+                fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap',
+              }}>{p}</button>
+            ))}
+          </div>
+        </div>
+
         {/* Tool tabs */}
-        <div style={{ display: 'flex', margin: '12px 16px 0', background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: 3 }}>
-          {[{ id: 'sticker', label: '😄 Stickers' }, { id: 'draw', label: '✏️ Draw' }, { id: 'text', label: 'T Text' }].map(t => (
+        <div style={{ display: 'flex', margin: '10px 16px 0', background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: 3 }}>
+          {[{ id: 'sticker', label: '😄 Stickers' }, { id: 'draw', label: '✏️ Draw' }, { id: 'text', label: 'Aa Text' }].map(t => (
             <button key={t.id} onClick={() => { setTool(t.id); setSelectedId(null); selectedIdRef.current = null; }} style={{
               flex: 1, padding: '8px 4px', borderRadius: 8, border: 'none', cursor: 'pointer',
               background: tool === t.id ? '#d4a843' : 'transparent',
@@ -583,15 +606,6 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, onClo
 
           {tool === 'text' && (
             <>
-              <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>Quick Phrases</p>
-              <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none', marginBottom: 4 }}>
-                {PHRASES.map(p => (
-                  <button key={p} onClick={() => addPhrase(p)} style={{
-                    flexShrink: 0, padding: '6px 12px', borderRadius: 20, border: '1px solid rgba(212,168,67,0.35)',
-                    background: 'rgba(212,168,67,0.08)', color: '#d4a843', fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap',
-                  }}>{p}</button>
-                ))}
-              </div>
               <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>Color</p>
               <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
                 {COLORS.map(c => (
