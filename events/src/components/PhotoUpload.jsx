@@ -55,6 +55,7 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, initi
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
   const [showSave, setShowSave] = useState(false);
+  const [saveFile, setSaveFile] = useState(null);
   const saveCanvasRef = useRef(null);
 
   const canvasRef = useRef(null);
@@ -417,13 +418,21 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, initi
     await new Promise(r => requestAnimationFrame(r));
     drawCanvas();
     await new Promise(r => setTimeout(r, 80));
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+    const file = new File([blob], 'party-photo.jpg', { type: 'image/jpeg' });
+    setSaveFile(file);
     setShowSave(true);
-    await new Promise(r => setTimeout(r, 120));
-    const sc = saveCanvasRef.current;
-    if (sc) {
-      sc.width = canvas.width;
-      sc.height = canvas.height;
-      sc.getContext('2d').drawImage(canvas, 0, 0);
+  };
+
+  const doSave = async () => {
+    setShowSave(false);
+    try {
+      await navigator.share({ files: [saveFile], title: 'Party Photo' });
+    } catch {
+      const url = URL.createObjectURL(saveFile);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'party-photo.jpg'; a.click();
+      URL.revokeObjectURL(url);
     }
   };
 
@@ -655,10 +664,16 @@ export default function PhotoUpload({ eventId, guestName, table, photoUrl, initi
       </div>
 
       {showSave && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: '#000', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, padding: 24 }}>
-          <p style={{ color: '#d4a843', fontWeight: 800, fontSize: 16, textAlign: 'center' }}>Hold down on the photo → tap "Save Image"</p>
-          <canvas ref={saveCanvasRef} style={{ maxWidth: '100%', maxHeight: '65vh', borderRadius: 12, display: 'block' }} />
-          <button onClick={onClose} style={bStyle('#d4a843', '#0a0a0a')}>← Back to Party</button>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, padding: 32, textAlign: 'center' }}>
+          <div style={{ fontSize: 52 }}>📱</div>
+          <h2 style={{ color: '#d4a843', fontSize: 20, fontWeight: 900 }}>Save to Your Gallery</h2>
+          <p style={{ color: '#fff', fontSize: 15, lineHeight: 1.7 }}>
+            Tap <strong style={{ color: '#d4a843' }}>"Save Now"</strong> below.<br/>
+            A menu will pop up — tap <strong style={{ color: '#d4a843' }}>"Save Image"</strong><br/>
+            and it goes straight to your Photos.
+          </p>
+          <button onClick={doSave} style={bStyle('#d4a843', '#0a0a0a')}>Save Now →</button>
+          <button onClick={() => setShowSave(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
         </div>
       )}
 
