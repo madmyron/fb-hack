@@ -12,3 +12,7 @@ services:
         value: https://qkjzanjtneiilsgctvxe.supabase.co
       - key: SUPABASE_KEY
         value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFranphbmp0bmVpaWxzZ2N0dnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTE3NzcsImV4cCI6MjA5MjUyNzc3N30.Qr2TJrRpbtuSE0gBxzIPe5zbgej9ySDd6TDK8jhGOSw
+      # Service role key — set in Render dashboard, NEVER commit the value.
+      # Required for the server to bypass RLS on titi_* tables.
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

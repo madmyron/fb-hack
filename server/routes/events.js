@@ -2,9 +2,14 @@ const express = require('express');
 const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
 
+// Server-side admin client — prefer service_role so RLS is bypassed for
+// trusted server operations (event create/update, order management, photo
+// deletion). Falls back to anon for local dev where RLS is permissive.
 const supabase = createClient(
   process.env.SUPABASE_URL || 'https://qkjzanjtneiilsgctvxe.supabase.co',
-  process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFranphbmp0bmVpaWxzZ2N0dnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTE3NzcsImV4cCI6MjA5MjUyNzc3N30.Qr2TJrRpbtuSE0gBxzIPe5zbgej9ySDd6TDK8jhGOSw'
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_KEY ||
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFranphbmp0bmVpaWxzZ2N0dnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTE3NzcsImV4cCI6MjA5MjUyNzc3N30.Qr2TJrRpbtuSE0gBxzIPe5zbgej9ySDd6TDK8jhGOSw'
 );
 
 const DEFAULT_MENU = [
